@@ -1,6 +1,6 @@
 Package: regsim
 Title: Fit and Appraise Regression Models Using Simulated Data
-Version: 0.1
+Version: 0.1.1
 Authors@R: 
     person(given = "Matthew",
            family = "McBee",
