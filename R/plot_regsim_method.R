@@ -13,6 +13,6 @@ plot.regsim <- function(x, sizeMan=10, edge.label.cex=1.5,
                         fixedStyle=1, ...) {
 
   semPlot::semPaths(semPlot::semPlotModel(x$true.model), whatLabels="est",
-           residuals=FALSE, sizeMan=sizeMan, edge.label.cex=edge.label.cex,
+           residuals=FALSE, exoCov=FALSE, sizeMan=sizeMan, edge.label.cex=edge.label.cex,
            fixedStyle=fixedStyle, ...)
 }
