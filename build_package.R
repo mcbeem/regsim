@@ -7,7 +7,7 @@ setwd("/Users/matt/OneDrive/")
 #usethis::create_package("regsim")
 
 setwd("/Users/matt/OneDrive/regsim")
-#document()
+document()
 setwd("..")
 install("regsim")
 library(regsim)

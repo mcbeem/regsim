@@ -31,6 +31,7 @@ A list containing the following:
  \item{fit.model}{the regression model that is fit to the data}
  \item{b}{a vector of target parameter estimates across the repetitions}
  \item{data}{a data frame containing the simulated data from the first repetition}
+ \item{true.DAG}{the true.model expressed as an object of class dagitty}
  \item{targetval}{the true value of the target parameter, used to calculate bias, RMSE, and coverage}
  \item{expected.b}{the mean value of the target parameter across the repetitions}
  \item{bias}{the mean difference between the estimated and target values of the
@@ -42,6 +43,9 @@ A list containing the following:
  \item{empirical.SE}{the standard deviation of the parameter estimates}
  \item{analytic.SE}{the mean of the analytic standard errors across repetitions}
  \item{RMSE}{the root mean squared error}
+ \item{adjustment.sets}{the sets of covariates that must be included in the fitted model
+   to yield an unbiased and consistent estimate of the effect of the target parameter on the
+   response variable in fit.model}
 }
 \description{
 This function provides a quick and convenient means for simulating data from a
@@ -53,18 +57,18 @@ standard errors.
 \examples{
 
 #  this is a DAG where Z is a confounder of the X -> Y relationship
- true.model <- 'X ~ .5*Z
-                Y ~ .5*X + .5*Z'
+true.model <- 'X ~ .5*Z
+               Y ~ .5*X + .5*Z'
 
- # misspecified model omitting Z
- fit.model <- 'Y ~ X'
+# misspecified model omitting Z
+fit.model <- 'Y ~ X'
 
- result <- regsim(reps=1000, n=100, true.model, fit.model, targetparm="X",
-                  targetval=.5)
- result
+result <- regsim(reps=1000, n=100, true.model, fit.model, targetparm="X",
+                 targetval=.5)
+result
 
- # visualize the DAG implied by the true.model
- plot(result)
+# visualize the path diagram implied by true.model
+plot(result)
 
 
 }
