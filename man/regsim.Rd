@@ -27,8 +27,13 @@ regsim(reps, n, true.model, fit.model, targetparm, targetval,
 }
 \value{
 A list containing the following:
+ \item{true.model}{the true model from which data are simulated}
+ \item{fit.model}{the regression model that is fit to the data}
+ \item{targetval}{the true value of the target parameter, used to calculate bias, RMSE, and coverage}
  \item{b}{a vector of target parameter estimates across the repetitions}
  \item{data}{a data frame containing the simulated data from the first repetition}
+ \item{expected.b}{the mean value of the target parameter across the repetitions}
+ \item{empirical.CI}{the empirical confidence interval boundaries across the repetitions}
  \item{coverage}{the proportion of repetitions in which the confidence interval captured
  the specified target value of the parameter. This should appoximately equal
  the specified confidence level}
@@ -57,6 +62,9 @@ standard errors.
  result <- regsim(reps=1000, n=100, true.model, fit.model, targetparm="X",
                   targetval=.5)
  result
+
+ # visualize the DAG implied by the true.model
+ plot(result)
 
 
 }

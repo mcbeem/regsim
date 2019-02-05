@@ -17,8 +17,13 @@
 #' \code{kurtosis} or \code{skewness} arguments to generate non-normal data
 #'
 #' @return A list containing the following:
+#'  \item{true.model}{the true model from which data are simulated}
+#'  \item{fit.model}{the regression model that is fit to the data}
+#'  \item{targetval}{the true value of the target parameter, used to calculate bias, RMSE, and coverage}
 #'  \item{b}{a vector of target parameter estimates across the repetitions}
 #'  \item{data}{a data frame containing the simulated data from the first repetition}
+#'  \item{expected.b}{the mean value of the target parameter across the repetitions}
+#'  \item{empirical.CI}{the empirical confidence interval boundaries across the repetitions}
 #'  \item{coverage}{the proportion of repetitions in which the confidence interval captured
 #'  the specified target value of the parameter. This should appoximately equal
 #'  the specified confidence level}
@@ -41,8 +46,11 @@
 #'                   targetval=.5)
 #'  result
 #'
+#'  # visualize the DAG implied by the true.model
+#'  plot(result)
 #'
-#' @importFrom stats as.formula confint lm na.omit sd
+#'
+#' @importFrom stats as.formula confint lm na.omit sd quantile
 #' @importFrom lavaan simulateData
 #' @export
 
@@ -106,8 +114,13 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
     bias[i] <- targetval - reg[[i]]$coef[parmnumber]
   }
 
-  output <- list(b=b,
+  output <- list(true.model=true.model,
+                 fit.model=fit.model,
+                 targetval=targetval,
+                 b=b,
                  data=myData[1:n,],
+                 expected.b=mean(b),
+                 emprical.CI=quantile(b, c((1-interval)/2, 1-((1-interval)/2))),
                  coverage=mean(coverage),
                  bias=mean(bias),
                  empirical.SE=sd(b),
@@ -115,7 +128,7 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
                  RMSE = sqrt(mean(bias^2)))
 
   class(output) = c("regsim", "list")
-  attr(output, "hidden") <- c("data", "b")
+  attr(output, "hidden") <- c("data", "b", "true.model", "fit.model")
 
 
   # calculate the summary results
