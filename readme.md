@@ -176,9 +176,9 @@ result
 
 -   `$targetval` The true value of the target parameter, *β*, which was specified when the function was called. It is used to calculate bias, RMSE, and coverage.
 
--   `$expected.b` The mean value of the target parameter estimate across all the simulated repetitions, $E(\\hat{b})$.
+-   `$expected.b` The mean value of the target parameter estimate across all the simulated repetitions, $E(\\hat{b})$. This value should closely approximate the corresponding true value.
 
--   `$bias` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\\hat{b}) - \\beta)$
+-   `$bias` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\\hat{b}) - \\beta)$. This value should be close to zero when the model is correctly specified.
 
 -   `analytical.SE` The average estimated standard error for the target parameter across the repetitions. The analytical standard error should closely approximate the empirical standard error if the model is correctly specified. A violation of certain regression assumptions can cause it to diverge from the empirical standard error.
 
@@ -206,37 +206,9 @@ The `regsim()` output includes a few other components which are not printed but 
 
 -   `$true.DAG` The data generating model expressed as a DAG of class `dagitty`.
 
-``` r
-str(result)
-```
+### Interpreting the results
 
-    ## List of 15
-    ##  $ true.model     : chr "X ~ .5*A + .5*B\n               M ~ .5*X\n               Y ~ .5*M + .5*A + .5*B"
-    ##  $ fit.model      : chr "Y ~ X"
-    ##  $ b              : num [1:1000] 0.537 0.557 0.446 0.785 0.528 ...
-    ##  $ data           :'data.frame': 100 obs. of  5 variables:
-    ##   ..$ X: num [1:100] -0.6119 -1.0575 0.546 0.5743 0.0865 ...
-    ##   ..$ M: num [1:100] -0.1687 -0.0344 0.8271 -1.0659 -0.9911 ...
-    ##   ..$ Y: num [1:100] -1.142 0.265 2.891 0.386 0.381 ...
-    ##   ..$ A: num [1:100] -0.161 -1.474 1.09 0.184 0.451 ...
-    ##   ..$ B: num [1:100] 0.214 1.115 1.006 0.109 1.07 ...
-    ##  $ true.DAG       : 'dagitty' Named chr "dag {\nA\nB\nM\nX [exposure]\nY [outcome]\nA -> X\nA -> Y\nA <-> B\nB -> X\nB -> Y\nM -> Y\nX -> M\n}\n"
-    ##  $ targetval      : num 0.25
-    ##  $ expected.b     : num 0.584
-    ##  $ bias           : num 0.334
-    ##  $ analytic.SE    : num 0.104
-    ##  $ empirical.SE   : num 0.0992
-    ##  $ analytic.CI    : Named num [1:2] 0.378 0.791
-    ##   ..- attr(*, "names")= chr [1:2] "2.5%" "97.5%"
-    ##  $ empirical.CI   : Named num [1:2] 0.379 0.778
-    ##   ..- attr(*, "names")= chr [1:2] "2.5%" "97.5%"
-    ##  $ coverage       : num 0.104
-    ##  $ RMSE           : num 0.349
-    ##  $ adjustment.sets:List of 1
-    ##   ..$ 1: chr [1:2] "A" "B"
-    ##   ..- attr(*, "class")= chr "dagitty.sets"
-    ##  - attr(*, "class")= chr [1:2] "regsim" "list"
-    ##  - attr(*, "hidden")= chr [1:5] "data" "b" "true.model" "fit.model" ...
+The results indicate that the fitted model is producing a biased estimated of the true effect of *X* → *Y*. This is can clearly be observed in the discrepancy between the mean estimated value (`$expected.b`) and the true value, which is also represented in the `$bias` value. The empirical and analytic standard error are quite close to one another, as are the confidence intervals, indicating that the problem with this model is in its fixed (structural) component. The bias results in a coverage rate that is far below its 95% nominal value. The RMSE is much larger than the standard error as a result of the bias.
 
 Because the fitted model is misspecified, the estimated effect of *X* → *Y* is biased. `regsim()` returns the parameter estimates across all of the repetitions in a list component `$b`. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
 
@@ -248,18 +220,28 @@ abline(v=.25, col="red", lty="dashed", lwd=1.5)
 abline(v=result$empirical.CI, lty="dotted")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
+
+We can visualize the distribution of the simulated data in lots of ways. One of the best and easiest is with the `pairs.panels()` function in the `psych` package. The `regsim()` output component `$data` contains the simulated data from the first repetition, which can be passed to `pairs.panels()` or any other function.
 
 ``` r
 psych::pairs.panels(result$data)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
+
+### Obtaining an Unbiased Estimate of the Effect of X on Y
+
+The `$adjustment.sets` output indicates the source of the problem: variables *A* and *B* must be included in this model as covariates in order to correctly estimate the *X* → *Y* effect. Let's correctly specify this model and re-run the simulation.
+
+The `fit.model=` argument of the code is altered to include *A* and *B* in the model formula.
 
 ``` r
-regsim(reps=1000, n=100, true.model=true.model, 
+result2 <- regsim(reps=1000, n=100, true.model=true.model, 
                  fit.model="Y~X+A+B", targetparm="X",
                  targetval=.25)
+
+result2
 ```
 
     ## $targetval
@@ -293,3 +275,73 @@ regsim(reps=1000, n=100, true.model=true.model,
     ## 
     ## $adjustment.sets
     ##  { A, B }
+
+The results indicate good performance. Bias is very low, the coverage rate is nearly 95%, there is close correspondence between the analytic and empirical standard error and confidence intervals, and the RMSE is dominated by sampling error.
+
+An updated histogram / density plot of the parameter estimates illustrate that they are now centered on the true value of the parameter.
+
+``` r
+hist(result2$b, breaks=30, freq=FALSE,
+     main="Parameter estimates for Y~X", xlab="b")
+points(density(result2$b), type='l')
+abline(v=.25, col="red", lty="dashed", lwd=1.5)
+abline(v=result2$empirical.CI, lty="dotted")
+```
+
+![](readme_files/figure-markdown_github/unnamed-chunk-19-1.png)
+
+### Misspecifying the Model by Conditioning on the Mediator
+
+In general, downstream descendents of the target parameter should not be included as covariates in an analysis. The only exception would be when explicit mediation modeling is intended. What happens if *M* is added to the model as a covariate, in addition to *A* and *B*? Simulation can answer that question.
+
+``` r
+result3 <- regsim(reps=1000, n=100, true.model=true.model, 
+                 fit.model="Y~X+A+B+M", targetparm="X",
+                 targetval=.25)
+
+result3
+```
+
+    ## $targetval
+    ## [1] 0.25
+    ## 
+    ## $expected.b
+    ## [1] 0.0003883205
+    ## 
+    ## $bias
+    ## [1] -0.2496117
+    ## 
+    ## $analytic.SE
+    ## [1] 0.114455
+    ## 
+    ## $empirical.SE
+    ## [1] 0.1122119
+    ## 
+    ## $analytic.CI
+    ##       2.5%      97.5% 
+    ## -0.2268336  0.2276103 
+    ## 
+    ## $empirical.CI
+    ##       2.5%      97.5% 
+    ## -0.2231423  0.2207332 
+    ## 
+    ## $coverage
+    ## [1] 0.417
+    ## 
+    ## $RMSE
+    ## [1] 0.2736511
+    ## 
+    ## $adjustment.sets
+    ##  { A, B }
+
+As the results indicate, conditioning on the mediator is a bad idea. It results in an intensely biased estimate of the effect of *X* on *Y*. In fact, the average estimated effect across all the repetitions is now zero.
+
+``` r
+hist(result3$b, breaks=30, freq=FALSE,
+     main="Parameter estimates for Y~X", xlab="b")
+points(density(result3$b), type='l')
+abline(v=.25, col="red", lty="dashed", lwd=1.5)
+abline(v=result3$empirical.CI, lty="dotted")
+```
+
+![](readme_files/figure-markdown_github/unnamed-chunk-21-1.png)
