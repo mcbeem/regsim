@@ -1,5 +1,8 @@
 ---
 title: "Introduction to regsim"
+output:
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r, echo=F, eval=F}
@@ -169,9 +172,32 @@ result
 
 * ```$bias``` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\hat{b}) - \beta)$
 
-* ```$empirical.CI``` These are the empirical percentiles of the estimated values of the target parameter at the limits specified by the ```interval=``` argument. By default these will be the 2.5th and 97.5th percentiles, corresponding to the 95% empirical confidence interval.
+* ```analytical.SE``` The average estimated standard error for the target parameter across the repetitions. The analytical standard error should closely approximate the empirical standard error if the model is correctly specified. A violation of certain regression assumptions can cause it to diverge from the empirical standard error.
 
-```regsim()``` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected using the ```str()``` function.
+* ```empirical.SE``` The calculated standard deviation of the parameter estimates $\hat{b}$. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
+
+* ```$analytic.CI``` The mean lower and upper analytic confidence interval boundaries for the target parameter across repetitions based on the limits specified by the ```interval=``` argument. These should closely approximate the empirical confidence interval boundaries; when this does not occur, an assumption violation has likely occurred. 
+
+* ```$empirical.CI``` The empirical percentiles of the estimated values of the target parameter at the limits specified by the ```interval=``` argument. By default these will be the 2.5th and 97.5th percentiles, corresponding to the 95% empirical confidence interval.
+
+* ```$coverage``` The proportion of repetitions in which the true value of the target parameter, $\beta$, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
+
+* ```$RMSE``` The root mean squared error, calculated as $\sqrt{E[(\hat{b}) - \beta)]^2}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+
+* ```$adjustment.sets``` The set(s) of covariates that, if included in the fitted regression model (argument ```fit.model=```), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the ```adjustmentSets()``` function of the ```dagitty``` package. When the set is empty, no covariates are required.
+
+
+The ```regsim()``` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected by running ```str()``` on the ```regsim()``` output. The other components of output include:
+
+* ```$true.model``` The data generating (true) model.
+
+* ```$fit.model``` The fitted model.
+
+* ```$b``` The vector of parameter estimates across repetitions.
+
+* ```$data```  A simulated dataset from the first repetition. (The data for the other repetitions is not available).
+
+* ```$true.DAG``` The data generating model expressed as a DAG of class ```dagitty```.
 
 ```{r}
 str(result)

@@ -22,7 +22,7 @@ Example 1
 
 A researcher envisions the following true data-generating process:
 
-![](readme_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 And is interested in estimating the effect of *X* on *Y* using a linear regression model of the following form:
 
@@ -110,6 +110,8 @@ Doing the simulation
 
 The simulation is performed using the `regsim()` function. The `true.model` and `fit.model` objects, previously created, are passed as arguments. The simulation results are stored in the `result` object. A random number seed has been specified for reproducibility.
 
+Note that, by default, `regsim()` does not impose a standardized metric on the generated variables, so users do not have to worry about implying variable correlations greater than one. In other words, when `standardized=FALSE`, path coefficients can be freely chosen.
+
 ``` r
 set.seed(123)
 
@@ -124,7 +126,7 @@ Before examining the results, let's verify that we specified the data generating
 plot(result)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 This plot looks correct, but the path coefficients for *A* → *Y* and *B* → *X* are superimposed. We can try an alternate layout for the graph. See `?lavaan::semPaths` for details on the options (under 'layout'). In this case, the `"spring"` layout works better and avoids overplotting.
 
@@ -132,7 +134,7 @@ This plot looks correct, but the path coefficients for *A* → *Y* and *B*�
 plot(result, layout="spring")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 Having verified that the data-generating model was set up correctly, let's examine the `regsim()` output.
 
@@ -149,18 +151,22 @@ result
     ## $bias
     ## [1] 0.3343389
     ## 
+    ## $analytic.SE
+    ## [1] 0.10401
+    ## 
+    ## $empirical.SE
+    ## [1] 0.09922978
+    ## 
+    ## $analytic.CI
+    ##      2.5%     97.5% 
+    ## 0.3779346 0.7907433 
+    ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
     ## 0.3788186 0.7775613 
     ## 
     ## $coverage
     ## [1] 0.104
-    ## 
-    ## $empirical.SE
-    ## [1] 0.09922978
-    ## 
-    ## $analytic.SE
-    ## [1] 0.10401
     ## 
     ## $RMSE
     ## [1] 0.3487395
@@ -174,13 +180,37 @@ result
 
 -   `$bias` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\\hat{b}) - \\beta)$
 
-`regsim()` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected using the `str()` function.
+-   `analytical.SE` The average estimated standard error for the target parameter across the repetitions. The analytical standard error should closely approximate the empirical standard error if the model is correctly specified. A violation of certain regression assumptions can cause it to diverge from the empirical standard error.
+
+-   `empirical.SE` The calculated standard deviation of the parameter estimates $\\hat{b}$. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
+
+-   `$analytic.CI` The mean lower and upper analytic confidence interval boundaries for the target parameter across repetitions based on the limits specified by the `interval=` argument. These should closely approximate the empirical confidence interval boundaries; when this does not occur, an assumption violation has likely occurred.
+
+-   `$empirical.CI` The empirical percentiles of the estimated values of the target parameter at the limits specified by the `interval=` argument. By default these will be the 2.5th and 97.5th percentiles, corresponding to the 95% empirical confidence interval.
+
+-   `$coverage` The proportion of repetitions in which the true value of the target parameter, *β*, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
+
+-   `$RMSE` The root mean squared error, calculated as $\\sqrt{E\[(\\hat{b}) - \\beta)\]^2}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+
+-   `$adjustment.sets` The set(s) of covariates that, if included in the fitted regression model (argument `fit.model=`), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the `adjustmentSets()` function of the `dagitty` package. When the set is empty, no covariates are required.
+
+The `regsim()` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected by running `str()` on the `regsim()` output. The other components of output include:
+
+-   `$true.model` The data generating (true) model.
+
+-   `$fit.model` The fitted model.
+
+-   `$b` The vector of parameter estimates across repetitions.
+
+-   `$data` A simulated dataset from the first repetition. (The data for the other repetitions is not available).
+
+-   `$true.DAG` The data generating model expressed as a DAG of class `dagitty`.
 
 ``` r
 str(result)
 ```
 
-    ## List of 14
+    ## List of 15
     ##  $ true.model     : chr "X ~ .5*A + .5*B\n               M ~ .5*X\n               Y ~ .5*M + .5*A + .5*B"
     ##  $ fit.model      : chr "Y ~ X"
     ##  $ b              : num [1:1000] 0.537 0.557 0.446 0.785 0.528 ...
@@ -194,11 +224,13 @@ str(result)
     ##  $ targetval      : num 0.25
     ##  $ expected.b     : num 0.584
     ##  $ bias           : num 0.334
+    ##  $ analytic.SE    : num 0.104
+    ##  $ empirical.SE   : num 0.0992
+    ##  $ analytic.CI    : Named num [1:2] 0.378 0.791
+    ##   ..- attr(*, "names")= chr [1:2] "2.5%" "97.5%"
     ##  $ empirical.CI   : Named num [1:2] 0.379 0.778
     ##   ..- attr(*, "names")= chr [1:2] "2.5%" "97.5%"
     ##  $ coverage       : num 0.104
-    ##  $ empirical.SE   : num 0.0992
-    ##  $ analytic.SE    : num 0.104
     ##  $ RMSE           : num 0.349
     ##  $ adjustment.sets:List of 1
     ##   ..$ 1: chr [1:2] "A" "B"
@@ -216,13 +248,13 @@ abline(v=.25, col="red", lty="dashed", lwd=1.5)
 abline(v=result$empirical.CI, lty="dotted")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 ``` r
 psych::pairs.panels(result$data)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 ``` r
 regsim(reps=1000, n=100, true.model=true.model, 
@@ -239,18 +271,22 @@ regsim(reps=1000, n=100, true.model=true.model,
     ## $bias
     ## [1] -0.006495071
     ## 
+    ## $analytic.SE
+    ## [1] 0.1133802
+    ## 
+    ## $empirical.SE
+    ## [1] 0.1167926
+    ## 
+    ## $analytic.CI
+    ##       2.5%      97.5% 
+    ## 0.01844698 0.46856288 
+    ## 
     ## $empirical.CI
     ##       2.5%      97.5% 
     ## 0.02176829 0.47546433 
     ## 
     ## $coverage
     ## [1] 0.942
-    ## 
-    ## $empirical.SE
-    ## [1] 0.1167926
-    ## 
-    ## $analytic.SE
-    ## [1] 0.1133802
     ## 
     ## $RMSE
     ## [1] 0.1169148
