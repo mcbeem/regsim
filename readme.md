@@ -166,31 +166,15 @@ result
     ## $adjustment.sets
     ##  { A, B }
 
-Because the fitted model is misspecified, the estimated effect of *X* → *Y* is biased. `regsim()` returns the parameter estimates across all of the repetitions in a list component `$b`. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
-
-``` r
-hist(result$b, breaks=30, freq=FALSE,
+Because the fitted model is misspecified, the estimated effect of *X* → *Y* is biased. `regsim()` returns the parameter estimates across all of the repetitions in a list component `<img src="/tex/54d3f605f8dfd1bab89b71be61ea281c.svg?invert_in_darkmode&sanitize=true" align=middle width=1632.6146528999998pt height=47.671232400000015pt/>b, breaks=30, freq=FALSE,
      main="Parameter estimates for Y~X", xlab="b")
-points(density(result$b), type='l')
-abline(v=.25, col="red", lty="dashed", lwd=1.5)
-abline(v=result$empirical.CI, lty="dotted")
+points(density(result<img src="/tex/6192455f11190d8ed1eb8b18d3b6f8de.svg?invert_in_darkmode&sanitize=true" align=middle width=609.66583755pt height=24.7161288pt/>empirical.CI, lty="dotted")
 ```
 
 ![](readme_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 ``` r
-psych::pairs.panels(result$data)
-```
-
-![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
-
-``` r
-regsim(reps=1000, n=100, true.model=true.model, 
-                 fit.model="Y~X+A+B", targetparm="X",
-                 targetval=.25)
-```
-
-    ## $targetval
+psych::pairs.panels(result<img src="/tex/d6e0590a9f11ecf55f14839f97e6232d.svg?invert_in_darkmode&sanitize=true" align=middle width=724.56843195pt height=126.57534120000001pt/>targetval
     ## [1] 0.25
     ## 
     ## $expected.b
