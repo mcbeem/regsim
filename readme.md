@@ -22,7 +22,7 @@ Example 1
 
 A researcher envisions the following true data-generating process:
 
-![](vignette_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 And is interested in estimating the effect of *X* on *Y* using a linear regression model of the following form:
 
@@ -124,7 +124,7 @@ Before examining the results, let's verify that we specified the data generating
 plot(result)
 ```
 
-![](vignette_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 This plot looks correct, but the path coefficients for *A* → *Y* and *B* → *X* are superimposed. We can try an alternate layout for the graph. See `?lavaan::semPaths` for details on the options (under 'layout'). In this case, the `"spring"` layout works better and avoids overplotting.
 
@@ -132,7 +132,7 @@ This plot looks correct, but the path coefficients for *A* → *Y* and *B*�
 plot(result, layout="spring")
 ```
 
-![](vignette_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Having verified that the data-generating model was set up correctly, let's examine the `regsim()` output.
 
@@ -144,26 +144,26 @@ result
     ## [1] 0.25
     ## 
     ## $expected.b
-    ## [1] 0.5879188
+    ## [1] 0.5865873
     ## 
     ## $bias
-    ## [1] 0.3379188
+    ## [1] 0.3365873
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.3997099 0.7962251 
+    ## 0.3910218 0.7718366 
     ## 
     ## $coverage
-    ## [1] 0.102
+    ## [1] 0.108
     ## 
     ## $empirical.SE
-    ## [1] 0.099412
+    ## [1] 0.09894042
     ## 
     ## $analytic.SE
-    ## [1] 0.1040395
+    ## [1] 0.1041711
     ## 
     ## $RMSE
-    ## [1] 0.3522243
+    ## [1] 0.350814
     ## 
     ## $adjustment.sets
     ##  { A, B }
@@ -174,13 +174,13 @@ abline(v=.25, col="red", lty="dashed", lwd=1.5)
 abline(v=result$empirical.CI, lty="dotted")
 ```
 
-![](vignette_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 ``` r
 psych::pairs.panels(result$data)
 ```
 
-![](vignette_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ``` r
 regsim(reps=1000, n=100, true.model=true.model, 
@@ -192,26 +192,26 @@ regsim(reps=1000, n=100, true.model=true.model,
     ## [1] 0.25
     ## 
     ## $expected.b
-    ## [1] 0.2481075
+    ## [1] 0.2505611
     ## 
     ## $bias
-    ## [1] -0.001892511
+    ## [1] 0.0005610967
     ## 
     ## $empirical.CI
     ##       2.5%      97.5% 
-    ## 0.02583589 0.46612279 
+    ## 0.01708882 0.47889796 
     ## 
     ## $coverage
-    ## [1] 0.959
+    ## [1] 0.95
     ## 
     ## $empirical.SE
-    ## [1] 0.114194
+    ## [1] 0.1153989
     ## 
     ## $analytic.SE
-    ## [1] 0.1143105
+    ## [1] 0.1140575
     ## 
     ## $RMSE
-    ## [1] 0.1141526
+    ## [1] 0.1153426
     ## 
     ## $adjustment.sets
     ##  { A, B }
