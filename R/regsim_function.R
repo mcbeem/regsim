@@ -85,7 +85,7 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
     if (!grepl(targetparm, true.model, fixed=TRUE)) stop("The target parameter must be included in true.model")
 
     #check whether fit.model is a subset of true.model
-    if (min(all.vars(as.formula(fit.model)) %in% unique(na.omit(unlist(strsplit(unlist(true.model), "[^a-zA-Z]+")))))==0) stop("All variables in fit.model must be included in true.model")
+    if (min(all.vars(as.formula(fit.model)) %in% unique(na.omit(unlist(strsplit(unlist(true.model), "[^a-zA-Z_.-]+")))))==0) stop("All variables in fit.model must be included in true.model")
   # end argument checks
 
   # find position of target parameter in model formula.
