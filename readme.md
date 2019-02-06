@@ -168,8 +168,12 @@ result
     ## $adjustment.sets
     ##  { A, B }
 
+Because the fitted model is misspecified, the estimated effect of *X* → *Y* is biased. `regsim()` returns the parameter estimates across all of the repetitions in a list component `$b`. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
+
 ``` r
-hist(result$b, breaks=30, main="Parameter estimates for Y~X", xlab="b")
+hist(result$b, breaks=30, freq=FALSE,
+     main="Parameter estimates for Y~X", xlab="b")
+points(density(result$b), type='l')
 abline(v=.25, col="red", lty="dashed", lwd=1.5)
 abline(v=result$empirical.CI, lty="dotted")
 ```
