@@ -108,9 +108,11 @@ By path tracing rules, the total effect of one variable on another when the effe
 Doing the simulation
 --------------------
 
-The simulation is performed using the `regsim()` function. The `true.model` and `fit.model` objects, previously created, are passed as arguments. The simulation results are stored in the `result` object.
+The simulation is performed using the `regsim()` function. The `true.model` and `fit.model` objects, previously created, are passed as arguments. The simulation results are stored in the `result` object. A random number seed has been specified for reproducibility.
 
 ``` r
+set.seed(123)
+
 result <- regsim(reps=1000, n=100, true.model=true.model, 
                  fit.model=fit.model, targetparm="X",
                  targetval=.25)
@@ -142,29 +144,67 @@ result
     ## [1] 0.25
     ## 
     ## $expected.b
-    ## [1] 0.5865873
+    ## [1] 0.5843389
     ## 
     ## $bias
-    ## [1] 0.3365873
+    ## [1] 0.3343389
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.3910218 0.7718366 
+    ## 0.3788186 0.7775613 
     ## 
     ## $coverage
-    ## [1] 0.108
+    ## [1] 0.104
     ## 
     ## $empirical.SE
-    ## [1] 0.09894042
+    ## [1] 0.09922978
     ## 
     ## $analytic.SE
-    ## [1] 0.1041711
+    ## [1] 0.10401
     ## 
     ## $RMSE
-    ## [1] 0.350814
+    ## [1] 0.3487395
     ## 
     ## $adjustment.sets
     ##  { A, B }
+
+-   `$targetval` The true value of the target parameter, *β*, which was specified when the function was called. It is used to calculate bias, RMSE, and coverage.
+
+-   `$expected.b` The mean value of the target parameter estimate across all the simulated repetitions, $E(\\hat{b})$.
+
+-   `$bias` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\\hat{b}) - \\beta)$
+
+`regsim()` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected using the `str()` function.
+
+``` r
+str(result)
+```
+
+    ## List of 14
+    ##  $ true.model     : chr "X ~ .5*A + .5*B\n               M ~ .5*X\n               Y ~ .5*M + .5*A + .5*B"
+    ##  $ fit.model      : chr "Y ~ X"
+    ##  $ b              : num [1:1000] 0.537 0.557 0.446 0.785 0.528 ...
+    ##  $ data           :'data.frame': 100 obs. of  5 variables:
+    ##   ..$ X: num [1:100] -0.6119 -1.0575 0.546 0.5743 0.0865 ...
+    ##   ..$ M: num [1:100] -0.1687 -0.0344 0.8271 -1.0659 -0.9911 ...
+    ##   ..$ Y: num [1:100] -1.142 0.265 2.891 0.386 0.381 ...
+    ##   ..$ A: num [1:100] -0.161 -1.474 1.09 0.184 0.451 ...
+    ##   ..$ B: num [1:100] 0.214 1.115 1.006 0.109 1.07 ...
+    ##  $ true.DAG       : 'dagitty' Named chr "dag {\nA\nB\nM\nX [exposure]\nY [outcome]\nA -> X\nA -> Y\nA <-> B\nB -> X\nB -> Y\nM -> Y\nX -> M\n}\n"
+    ##  $ targetval      : num 0.25
+    ##  $ expected.b     : num 0.584
+    ##  $ bias           : num 0.334
+    ##  $ empirical.CI   : Named num [1:2] 0.379 0.778
+    ##   ..- attr(*, "names")= chr [1:2] "2.5%" "97.5%"
+    ##  $ coverage       : num 0.104
+    ##  $ empirical.SE   : num 0.0992
+    ##  $ analytic.SE    : num 0.104
+    ##  $ RMSE           : num 0.349
+    ##  $ adjustment.sets:List of 1
+    ##   ..$ 1: chr [1:2] "A" "B"
+    ##   ..- attr(*, "class")= chr "dagitty.sets"
+    ##  - attr(*, "class")= chr [1:2] "regsim" "list"
+    ##  - attr(*, "hidden")= chr [1:5] "data" "b" "true.model" "fit.model" ...
 
 Because the fitted model is misspecified, the estimated effect of *X* → *Y* is biased. `regsim()` returns the parameter estimates across all of the repetitions in a list component `$b`. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
 
@@ -176,13 +216,13 @@ abline(v=.25, col="red", lty="dashed", lwd=1.5)
 abline(v=result$empirical.CI, lty="dotted")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ``` r
 psych::pairs.panels(result$data)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 ``` r
 regsim(reps=1000, n=100, true.model=true.model, 
@@ -194,26 +234,26 @@ regsim(reps=1000, n=100, true.model=true.model,
     ## [1] 0.25
     ## 
     ## $expected.b
-    ## [1] 0.2505611
+    ## [1] 0.2435049
     ## 
     ## $bias
-    ## [1] 0.0005610967
+    ## [1] -0.006495071
     ## 
     ## $empirical.CI
     ##       2.5%      97.5% 
-    ## 0.01708882 0.47889796 
+    ## 0.02176829 0.47546433 
     ## 
     ## $coverage
-    ## [1] 0.95
+    ## [1] 0.942
     ## 
     ## $empirical.SE
-    ## [1] 0.1153989
+    ## [1] 0.1167926
     ## 
     ## $analytic.SE
-    ## [1] 0.1140575
+    ## [1] 0.1133802
     ## 
     ## $RMSE
-    ## [1] 0.1153426
+    ## [1] 0.1169148
     ## 
     ## $adjustment.sets
     ##  { A, B }

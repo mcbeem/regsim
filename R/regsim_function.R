@@ -13,6 +13,7 @@
 #' @param targetparm character; the focal predictor. Must be included in the model formula passed to \code{true.model}
 #' @param targetval the true value of the path coefficient relating the focal predictor to the response variable
 #' @param interval the confidence interval width, defaults to 0.95.
+#' @param standardized logical; should the data be generated on a standardized scale? defaults to FALSE
 #' @param ... additional arguments passed to lavaan's \code{simulateData} function. For example, one could invoke the
 #' \code{kurtosis} or \code{skewness} arguments to generate non-normal data
 #'
@@ -24,14 +25,14 @@
 #'  \item{true.DAG}{the true.model expressed as an object of class dagitty}
 #'  \item{targetval}{the true value of the target parameter, used to calculate bias, RMSE, and coverage}
 #'  \item{expected.b}{the mean value of the target parameter across the repetitions}
-#'  \item{bias}{the mean difference between the estimated and target values of the
-#'  parameter across repetitions}
+#'  \item{bias}{the mean difference between the estimated and target values of the parameter across repetitions}
+#'  \item{analytic.SE}{the mean of the analytic standard errors across repetitions}
+#'  \item{empirical.SE}{the standard deviation of the parameter estimates}
+#'  \item{analytic.CI}{the analytic confidence interval boundaries, calculated as the mean of the lower and upper boundaries across the repetitions}
 #'  \item{empirical.CI}{the empirical confidence interval boundaries across the repetitions}
 #'  \item{coverage}{the proportion of repetitions in which the confidence interval captured
 #'  the specified target value of the parameter. This should appoximately equal
 #'  the specified confidence level}
-#'  \item{empirical.SE}{the standard deviation of the parameter estimates}
-#'  \item{analytic.SE}{the mean of the analytic standard errors across repetitions}
 #'  \item{RMSE}{the root mean squared error}
 #'  \item{adjustment.sets}{the sets of covariates that must be included in the fitted model
 #'    to yield an unbiased and consistent estimate of the effect of the target parameter on the
@@ -59,13 +60,16 @@
 #' @export
 
 regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
-                   interval=.95, ...) {
+                   interval=.95, standardized=FALSE, ...) {
 
   # begin checks of the supplied arguments
     # check whether reps, n, and interval are numeric
     if (!is.numeric(n)) stop("n must be a number")
     if (!is.numeric(reps)) stop("reps must be a number")
     if (!is.numeric(interval)) stop("reps must be a number")
+
+    # check whether standardized is logical
+    if (!is.logical(standardized)) stop("standardized must be TRUE or FALSE")
 
     # check whether reps > 2
     if (reps < 2) stop("reps must be at least 2, and should be at least 1000 for trustworthy results")
@@ -93,7 +97,8 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
 
   # generate data using lavaan
   #  note that it is one huge dataset. this is much faster
-  myData <- lavaan::simulateData(true.model, sample.nobs=n*reps, ...)
+  myData <- lavaan::simulateData(true.model, sample.nobs=n*reps,
+                                 standardized=standardized, ...)
 
   # define empty objects to hold results
   coverage <- rep(NA, times=reps)
@@ -101,6 +106,7 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
   b <- rep(NA, times=reps)
   se <- rep(NA, times=reps)
   reg <- list(length=reps)
+  CI <- matrix(c(NA, NA), nrow=reps, ncol=2)
 
   # loop over reps
   for (i in 1:reps) {
@@ -111,9 +117,9 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
     # se is the analytical standard error of the target estimate
     se[i] <- summary(reg[[i]])$coef[parmnumber, 2]
     # CI will contain the boundaries of the CI
-    CI <- confint(reg[[i]], parm=parmnumber, level=interval)
+    CI[i,] <- confint(reg[[i]], parm=parmnumber, level=interval)
     # coverage is a logical vector indicating whether true value was captured
-    coverage[i] <- CI[1] <= targetval & CI[2] >= targetval
+    coverage[i] <- CI[i, 1] <= targetval & CI[i, 2] >= targetval
     # bias is the true value minus the estimate
     bias[i] <- reg[[i]]$coef[parmnumber] - targetval
   }
@@ -121,6 +127,9 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
   true.DAG <- dagitty::lavaanToGraph(lavaan::lavaanify(true.model))
   dagitty::exposures(true.DAG) <- targetparm
   dagitty::outcomes(true.DAG) <- all.vars(as.formula(fit.model))[1]
+
+  analytic.CI <- c(mean(CI[,1]), mean(CI[,2]))
+  names(analytic.CI) <- c(paste0((1-interval)/2*100, "%"), paste0((1-((1-interval)/2))*100, "%"))
 
   output <- list(true.model=true.model,
                  fit.model=fit.model,
@@ -130,10 +139,11 @@ regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,
                  targetval=targetval,
                  expected.b=mean(b),
                  bias=mean(bias),
+                 analytic.SE=mean(se),
+                 empirical.SE=sd(b),
+                 analytic.CI=analytic.CI,
                  empirical.CI=quantile(b, c((1-interval)/2, 1-((1-interval)/2))),
                  coverage=mean(coverage),
-                 empirical.SE=sd(b),
-                 analytic.SE=mean(se),
                  RMSE = sqrt(mean(bias^2)),
                  adjustment.sets = dagitty::adjustmentSets(true.DAG))
 

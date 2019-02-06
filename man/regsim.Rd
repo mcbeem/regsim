@@ -5,7 +5,7 @@
 \title{Fit and appraise regression models using simulated data}
 \usage{
 regsim(reps, n, true.model, fit.model, targetparm, targetval,
-  interval = 0.95, ...)
+  interval = 0.95, standardized = FALSE, ...)
 }
 \arguments{
 \item{reps}{the number of repetitions to perform}
@@ -22,6 +22,8 @@ regsim(reps, n, true.model, fit.model, targetparm, targetval,
 
 \item{interval}{the confidence interval width, defaults to 0.95.}
 
+\item{standardized}{logical; should the data be generated on a standardized scale? defaults to FALSE}
+
 \item{...}{additional arguments passed to lavaan's \code{simulateData} function. For example, one could invoke the
 \code{kurtosis} or \code{skewness} arguments to generate non-normal data}
 }
@@ -34,14 +36,14 @@ A list containing the following:
  \item{true.DAG}{the true.model expressed as an object of class dagitty}
  \item{targetval}{the true value of the target parameter, used to calculate bias, RMSE, and coverage}
  \item{expected.b}{the mean value of the target parameter across the repetitions}
- \item{bias}{the mean difference between the estimated and target values of the
- parameter across repetitions}
+ \item{bias}{the mean difference between the estimated and target values of the parameter across repetitions}
+ \item{analytic.SE}{the mean of the analytic standard errors across repetitions}
+ \item{empirical.SE}{the standard deviation of the parameter estimates}
+ \item{analytic.CI}{the analytic confidence interval boundaries, calculated as the mean of the lower and upper boundaries across the repetitions}
  \item{empirical.CI}{the empirical confidence interval boundaries across the repetitions}
  \item{coverage}{the proportion of repetitions in which the confidence interval captured
  the specified target value of the parameter. This should appoximately equal
  the specified confidence level}
- \item{empirical.SE}{the standard deviation of the parameter estimates}
- \item{analytic.SE}{the mean of the analytic standard errors across repetitions}
  \item{RMSE}{the root mean squared error}
  \item{adjustment.sets}{the sets of covariates that must be included in the fitted model
    to yield an unbiased and consistent estimate of the effect of the target parameter on the
