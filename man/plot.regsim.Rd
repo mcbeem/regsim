@@ -5,7 +5,7 @@
 \title{Plot method for class regsim}
 \usage{
 \method{plot}{regsim}(x, sizeMan = 10, edge.label.cex = 1.5,
-  fixedStyle = 1, ...)
+  fixedStyle = 1, nCharNodes = 0, ...)
 }
 \arguments{
 \item{x}{an object of class regsim to be printed}
