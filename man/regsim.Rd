@@ -69,8 +69,12 @@ result <- regsim(reps=1000, n=100, true.model, fit.model, targetparm="X",
                  targetval=.5)
 result
 
-# visualize the path diagram implied by true.model
-plot(result)
-
+# visualize the model
+plot(result, type="model")
+# visualize the simulated data
+plot(result, type="data")
+# visualize the results
+plot(result, type="perf")
+plot(result, type="compareSE")
 
 }

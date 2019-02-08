@@ -1,14 +1,14 @@
 Package: regsim
 Title: Fit and Appraise Regression Models Using Simulated Data
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: 
     person(given = "Matthew",
            family = "McBee",
            role = c("aut", "cre"),
            email = "mcbeem@etsu.edu")
-Description: This function provides a quick and convenient means for simulating data from 	a path diagram, fitting regression models to the simulated data, and appraising 	the model's performance with respect to a particular target parameter and its 		standard error. The function calculates the bias, coverage rate, RMSE, and 		analytical and 	empirical standard errors.
+Description: This package provides a quick and convenient means for simulating data from 	a path diagram, fitting regression models to the simulated data, and appraising 	the model's performance with respect to a particular target parameter and its 		standard error. The function calculates the bias, coverage rate, RMSE, and 		analytical and 	empirical standard errors.
 License: GPL-3
-Imports: lavaan, semPlot, dagitty
+Imports: lavaan, semPlot, dagitty, psych
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
