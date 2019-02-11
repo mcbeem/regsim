@@ -1,11 +1,3 @@
-``` r
-library(regsim)
-library(dagitty)
-library(semPlot)
-library(lavaan)
-library(psych)
-```
-
 `regsim` is an `R` package to make simulation quick and easy. It can be installed from github with the following `R` code.
 
 ``` r
@@ -22,7 +14,7 @@ Example 1: Confounders and mediators
 
 A researcher envisions the following true data-generating process:
 
-![](readme_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 And is interested in estimating the effect of *X* on *Y* using a linear regression model of the following form:
 
@@ -35,7 +27,7 @@ Defining the Data Generating (True) Model
 
 The process of specifying the data generating model is simple.
 
-1.  **Sketch the path diagram describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
+1.  **Sketch the path diagram (or SEM) describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
 
 2.  **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogeous variable has at least one arrow directed toward it. In our example, variables *A* and *B* are exogenous, while *X*, *M*, and *Y* are endogenous.
 
@@ -71,7 +63,7 @@ Finally, *Y* is caused by *A*, *B*, and *M*, so its model must include these var
 Y ~ .5*A + .5*B + .5*M
 ```
 
-We will create an object called `true.model` that will be passed to `regsim()` to describe the model. It will consist of a quoted string including all three of the models specified above. These can all go on one line, or you can separate them with line breaks for readability.
+We will create an object called `true.model` that will be passed to `regsim()` to describe the model. It will consist of a quoted string including all three of the models specified above. These must be separated with line breaks. The full `lavaan` syntax is available for data generation, including latent variables.
 
 ``` r
 true.model <- "X ~ .5*A + .5*B
@@ -120,13 +112,13 @@ result_1a <- regsim(reps=1000, n=100, true.model=true.model,
                  targetval=.25)
 ```
 
-Before examining the results, let's verify that we specified the data generating model correctly. Running `plot()` on the `regsim()` output with the argument `plot="model"` (the default) will produce a path diagram corresponding to this model.
+Before examining the results, let's verify that we specified the data generating model correctly. Running `plot()` on the `regsim()` output with the argument `plot="model"` will produce a path diagram corresponding to this model.
 
 ``` r
 plot(result_1a, type="model")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 This plot looks correct, but the path coefficients for *A* → *Y* and *B* → *X* are superimposed. We can try an alternate layout for the graph. See `?lavaan::semPaths` for details on the options (under 'layout'). In this case, the `"spring"` layout works better and avoids overplotting.
 
@@ -134,7 +126,7 @@ This plot looks correct, but the path coefficients for *A* → *Y* and *B*�
 plot(result_1a, type="model", layout="spring")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Having verified that the data-generating model was set up correctly, let's examine the `regsim()` output.
 
@@ -176,13 +168,13 @@ result_1a
 
 -   `$targetval` The true value of the target parameter, *β*, which was specified when the function was called. It is used to calculate bias, RMSE, and coverage.
 
--   `$expected.b` The mean value of the target parameter estimate across all the simulated repetitions, $E(\\hat{b})$. This value should closely approximate the corresponding true value.
+-   `$expected.b` The mean value of the target parameter estimate across all the simulated repetitions, *E*(*b*). This value should closely approximate the corresponding true value.
 
--   `$bias` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\\hat{b}) - \\beta)$. This value should be close to zero when the model is correctly specified.
+-   `$bias` Bias is calculated as the mean of the difference between the true value of the target parameter and its estimate across repetitions, *E*(*b* − *β*). This value should be close to zero when the model is correctly specified.
 
 -   `analytical.SE` The average estimated standard error for the target parameter across the repetitions. The analytical standard error should closely approximate the empirical standard error if the model is correctly specified. A violation of certain regression assumptions can cause it to diverge from the empirical standard error.
 
--   `empirical.SE` The calculated standard deviation of the parameter estimates $\\hat{b}$. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
+-   `empirical.SE` The calculated standard deviation of the parameter estimates, *b*. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
 
 -   `$analytic.CI` The mean lower and upper analytic confidence interval boundaries for the target parameter across repetitions based on the limits specified by the `interval=` argument. These should closely approximate the empirical confidence interval boundaries; when this does not occur, an assumption violation has likely occurred.
 
@@ -190,7 +182,7 @@ result_1a
 
 -   `$coverage` The proportion of repetitions in which the true value of the target parameter, *β*, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
 
--   `$RMSE` The root mean squared error, calculated as $\\sqrt{E\[(\\hat{b}) - \\beta)\]^2}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+-   `$RMSE` The root mean squared error, calculated as $\\sqrt{E\[(b - \\beta)^2\]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
 
 -   `$adjustment.sets` The set(s) of covariates that, if included in the fitted regression model (argument `fit.model=`), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the `adjustmentSets()` function of the `dagitty` package. When the set is empty, no covariates are required.
 
@@ -218,7 +210,7 @@ This plot can be generated by running `plot()` on the `regsim()` output with `ty
 plot(result_1a, type="perf", breaks=30)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 We can visualize the distribution of the simulated data in lots of ways. The easiest is to `plot()` the `regsim()` output using `type="data"`. This plots the data from the first repetition of the simulation with the `pairs.panels()` function from the `psych` package.
 
@@ -226,7 +218,7 @@ We can visualize the distribution of the simulated data in lots of ways. The eas
 plot(result_1a, type="data")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ### Obtaining an Unbiased Estimate of the Effect of X on Y
 
@@ -282,7 +274,7 @@ An updated histogram / density plot of the parameter estimates illustrate that t
 plot(result_1b, type="perf", breaks=30)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-19-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 ### Misspecifying the Model by Conditioning on the Mediator
 
@@ -328,13 +320,13 @@ result_1c
     ## $adjustment.sets
     ##  { A, B }
 
-As the results indicate, conditioning on the mediator is a bad idea. It results in an intensely biased estimate of the effect of *X* on *Y*. In fact, the average estimated effect across all the repetitions is now zero.
+As the results indicate, conditioning on the mediator is a bad idea. It results in an intensely biased estimate of the effect of *X* on *Y*. In fact, the average estimated effect across all the repetitions is now zero. Note that the variable *M* is not included in the `$adjustment.sets` component of the output.
 
 ``` r
 plot(result_1c, type="perf", breaks=30)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-21-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-20-1.png)
 
 Example 2: Violating distributional assumptions
 ===============================================
@@ -347,7 +339,7 @@ I intend to generate data such that *Y* is severely skewed and *X* is not. I wil
 
 *κ* ≥ 1 + *γ*<sup>2</sup>
 
-Non-normal data generation in `regsim()` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in `lavaan`'s `simulateData()` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of ±4.
+Non-normal data generation in `regsim()` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in `lavaan`'s `simulateData()` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of ±4. This is an extreme level of non-normality.
 
 ``` r
 result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", fit.model="Y~X", targetparm="X", targetval=.5, kurtosis=c(26, 0), skewness=c(4, 0))
@@ -367,7 +359,7 @@ Next, I examine the `$data` with `psych`'s `pairs.panels()` function.
 plot(result_2, type="data")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 The plot show that the *Y* variable was skewed as intended.
 
@@ -416,11 +408,10 @@ The regression assumption that has been violated in this case is that the distri
 Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running `plot()` on the `regsim()` output with `type="compareSE"`. When the regreesion assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
 
 ``` r
-# create the empirical density plot
 plot(result_2, type="compareSE")
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-26-1.png)
+![](readme_files/figure-markdown_github/unnamed-chunk-25-1.png)
 
 Not only is the empirical sampling distribution platykurtotic, it is also slightly skewed to the right.
 
@@ -431,16 +422,18 @@ Example 3: Measurement error
 
 Measurement error is a ubiquitous feature of real data. Linear regression models assume that the predictor variables are measured without error. No such assumption is made about the response variable. We can explore this issue with simulation.
 
-The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9.
+The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliabilitiy coefficients in the 0.5 range.
 
 Measurement error in predictor variables
 ----------------------------------------
 
-Let us imagine that we can measure variable *X* with a reliability of 0.8. According to classical test theory, *X* is composed of a true score component *X*<sub>*t**r**u**e*</sub>, a measurement error component *X*<sub>*e**r**r**o**r*</sub>. The observed values of this variable, which are contaminated with measurement error, is *X*<sub>*o*</sub>*b**s*. *X*<sub>*t**r**u**e*</sub> and *X*<sub>*e**r**r**o**r*</sub> are latent variables that cannot be observed.
+Let us imagine that we can measure variable *X* with a reliability of 0.7. According to classical test theory, the observed score *X*<sub>*o**b**s*</sub> is composed of a true score component *X*<sub>*t**r**u**e*</sub> plus measurement error component *X*<sub>*e**r**r**o**r*</sub>.
 
-The situation can be represented by the following path diagram.
+A key equation in classical test theory is
 
-![](readme_files/figure-markdown_github/unnamed-chunk-27-1.png)
+$$
+Var(X) = \\frac{Var(T)}{Var(T)+Var(E)}
+$$
 
 Note that there is no path from *X*<sub>*o*</sub>*b**s* to *Y*. *Y* is caused by the true value, *X*<sub>*t**r**u**e*</sub>, and not by the observed *X*<sub>*o**b**s*</sub>. The path coefficients *X*<sub>*t**r**u**e*</sub> → *X*<sub>*o**b**s*</sub> and *X*<sub>*e**r**r**o**r*</sub> → *X*<sub>*o**b**s*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*o**b**s*</sub>.
 
@@ -451,17 +444,22 @@ The path coefficient for *X*<sub>*e**r**r**o**r*</sub> → *X*<sub>*o**b**s*
 The code to define the data generating model is as follows.
 
 ``` r
-true.model <- "X_obs ~~ 0*X_obs
-               X_obs ~ 1*X_true + .25*X_error
+true.model <- "X_true =~ 1*X_obs  
+               X_true ~~ 1*X_true   
+               X_obs ~~ .25*X_obs
                Y ~ .5*X_true"
 ```
 
 Next, we run the simulation. Also note that the target value I have set is equal to the effect of *X*<sub>*t*</sub>*r**u**e* → *Y*, not the zero effect of *X*<sub>*o**b**s*</sub> → *Y*.
 
+The results indicate that the estimated effect of *X* → *Y* is biased. The reason is that the unobservable true score *X*<sub>*t**r**u**e*</sub> is a confounder. This is seen in the `$adjustment.sets` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent *X*<sub>*t**r**u**e*</sub> with its proxy variable, *X*<sub>*o**b**s*</sub>. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
+
+Measurement error in the response variable
+------------------------------------------
+
 ``` r
 result_3a <- regsim(reps=1000, n=300, true.model=true.model, 
                     fit.model="Y~X_obs", targetparm="X_obs", targetval=.5)
-
 result_3a
 ```
 
@@ -469,49 +467,60 @@ result_3a
     ## [1] 0.5
     ## 
     ## $expected.b
-    ## [1] 0.4704867
+    ## [1] 0.3994679
     ## 
     ## $bias
-    ## [1] -0.02951327
+    ## [1] -0.1005321
     ## 
     ## $analytic.SE
-    ## [1] 0.05678875
+    ## [1] 0.05327543
     ## 
     ## $empirical.SE
-    ## [1] 0.05841299
+    ## [1] 0.05405776
     ## 
     ## $analytic.CI
     ##      2.5%     97.5% 
-    ## 0.3587289 0.5822445 
+    ## 0.2946242 0.5043116 
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.3547993 0.5866585 
+    ## 0.2958502 0.5027662 
     ## 
     ## $coverage
-    ## [1] 0.915
+    ## [1] 0.531
     ## 
     ## $RMSE
-    ## [1] 0.0654194
+    ## [1] 0.1141316
     ## 
     ## $adjustment.sets
-    ##  { X_true }
 
-The results indicate that the estimated effect of *X* → *Y* is biased. The reason is that the unobservable true score *X*<sub>*t**r**u**e*</sub> is a confounder. This is seen in the `$adjustment.sets` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent *X*<sub>*t**r**u**e*</sub> with its proxy variable, *X*<sub>*o**b**s*</sub>. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
+``` r
+plot(result_3a, type="perf", breaks=30)
+```
 
-Measurement error in the response variable
-------------------------------------------
+![](readme_files/figure-markdown_github/unnamed-chunk-28-1.png)
+
+``` r
+plot(result_3a, type="model", layout="circle")
+```
+
+![](readme_files/figure-markdown_github/unnamed-chunk-29-1.png)
+
+``` r
+plot(result_3a, type="data")
+```
 
 ![](readme_files/figure-markdown_github/unnamed-chunk-30-1.png)
 
 ``` r
-true.model <- "Y_obs ~~ 0*Y_obs
-               Y_obs ~ 1*Y_true + .25*Y_error
+true.model <- "Y_true =~ 1*Y_obs  
+               Y_true ~~ 1*Y_true   
+               Y_obs ~~ .25*Y_obs
                Y_true ~ .5*X"
 ```
 
 ``` r
-result_3b <- regsim(reps=1000, n=1000, true.model=true.model, 
+result_3b <- regsim(reps=1000, n=300, true.model=true.model, 
                     fit.model="Y_obs~X", targetparm="X", targetval=.5)
 
 result_3b
@@ -521,30 +530,42 @@ result_3b
     ## [1] 0.5
     ## 
     ## $expected.b
-    ## [1] 0.5005869
+    ## [1] 0.5020528
     ## 
     ## $bias
-    ## [1] 0.0005868813
+    ## [1] 0.002052804
     ## 
     ## $analytic.SE
-    ## [1] 0.03258453
+    ## [1] 0.06465195
     ## 
     ## $empirical.SE
-    ## [1] 0.03278068
+    ## [1] 0.06106333
     ## 
     ## $analytic.CI
     ##      2.5%     97.5% 
-    ## 0.4366448 0.5645289 
+    ## 0.3748206 0.6292850 
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.4364436 0.5623662 
+    ## 0.3872154 0.6170377 
     ## 
     ## $coverage
-    ## [1] 0.951
+    ## [1] 0.965
     ## 
     ## $RMSE
-    ## [1] 0.03276955
+    ## [1] 0.0610673
     ## 
     ## $adjustment.sets
-    ##  { Y_error }
+    ##  {}
+
+``` r
+plot(result_3b, type="perf", breaks=30)
+```
+
+![](readme_files/figure-markdown_github/unnamed-chunk-33-1.png)
+
+``` r
+plot(result_3b, type="model", layout="circle")
+```
+
+![](readme_files/figure-markdown_github/unnamed-chunk-34-1.png)

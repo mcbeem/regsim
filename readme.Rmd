@@ -11,21 +11,8 @@ output:
     variant: markdown_github
 ```
 
-
-```{r, include=F}
-library(regsim)
+```{r, include=FALSE}
 library(dagitty)
-library(semPlot)
-library(lavaan)
-library(psych)
-```
-
-```{r, eval=F}
-library(regsim)
-library(dagitty)
-library(semPlot)
-library(lavaan)
-library(psych)
 ```
 
 
@@ -64,7 +51,7 @@ Simulation is a useful technique for exploring the results of analytic decisions
 
 The process of specifying the data generating model is simple. 
 
-1. **Sketch the path diagram describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
+1. **Sketch the path diagram (or SEM) describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
 
 2. **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogeous variable has at least one arrow directed toward it. In our example, variables $A$ and $B$ are exogenous, while $X$, $M$, and $Y$ are endogenous.
 
@@ -100,7 +87,7 @@ Finally, $Y$ is caused by $A$, $B$, and $M$, so its model must include these var
 Y ~ .5*A + .5*B + .5*M
 ```
 
-We will create an object called ```true.model``` that will be passed to ```regsim()``` to describe the model. It will consist of a quoted string including all three of the models specified above. These can all go on one line, or you can separate them with line breaks for readability. 
+We will create an object called ```true.model``` that will be passed to ```regsim()``` to describe the model. It will consist of a quoted string including all three of the models specified above. These must be separated with line breaks. The full ```lavaan``` syntax is available for data generation, including latent variables. 
 
 ```{r}
 true.model <- "X ~ .5*A + .5*B
@@ -147,16 +134,16 @@ result_1a <- regsim(reps=1000, n=100, true.model=true.model,
 
 ```
 
-Before examining the results, let's verify that we specified the data generating model correctly. Running ```plot()``` on the ```regsim()``` output will produce a path diagram corresponding to this model.
+Before examining the results, let's verify that we specified the data generating model correctly. Running ```plot()``` on the ```regsim()``` output with the argument ```plot="model"``` will produce a path diagram corresponding to this model.
 
 ```{r, fig.width=5, fig.height=4.5}
-plot(result_1a)
+plot(result_1a, type="model")
 ```
 
 This plot looks correct, but the path coefficients for $A \rightarrow Y$ and $B \rightarrow X$ are superimposed. We can try an alternate layout for the graph. See ```?lavaan::semPaths``` for details on the options (under 'layout'). In this case, the ```"spring"``` layout works better and avoids overplotting.
 
 ```{r, fig.width=5, fig.height=4.5}
-plot(result_1a, layout="spring")
+plot(result_1a, type="model", layout="spring")
 ```
 
 Having verified that the data-generating model was set up correctly, let's examine the ```regsim()``` output.
@@ -167,13 +154,13 @@ result_1a
 
 * ```$targetval``` The true value of the target parameter, $\beta$, which was specified when the function was called. It is used to calculate bias, RMSE, and coverage.
 
-* ```$expected.b``` The mean value of the target parameter estimate across all the simulated repetitions, $E(\hat{b})$. This value should closely approximate the corresponding true value.
+* ```$expected.b``` The mean value of the target parameter estimate across all the simulated repetitions, $E(b)$. This value should closely approximate the corresponding true value.
 
-* ```$bias``` Bias is calculated as the difference between the true value of the target parameter and the mean value of its estimate across repetitions. $E(\hat{b}) - \beta)$. This value should be close to zero when the model is correctly specified.
+* ```$bias``` Bias is calculated as the mean of the difference between the true value of the target parameter and its estimate across repetitions, $E(b-\beta)$. This value should be close to zero when the model is correctly specified. 
 
 * ```analytical.SE``` The average estimated standard error for the target parameter across the repetitions. The analytical standard error should closely approximate the empirical standard error if the model is correctly specified. A violation of certain regression assumptions can cause it to diverge from the empirical standard error.
 
-* ```empirical.SE``` The calculated standard deviation of the parameter estimates $\hat{b}$. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
+* ```empirical.SE``` The calculated standard deviation of the parameter estimates, $b$. The empirical standard error is an estimated of what the sampling variability of the parameter actually is.
 
 * ```$analytic.CI``` The mean lower and upper analytic confidence interval boundaries for the target parameter across repetitions based on the limits specified by the ```interval=``` argument. These should closely approximate the empirical confidence interval boundaries; when this does not occur, an assumption violation has likely occurred. 
 
@@ -181,7 +168,7 @@ result_1a
 
 * ```$coverage``` The proportion of repetitions in which the true value of the target parameter, $\beta$, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
 
-* ```$RMSE``` The root mean squared error, calculated as $\sqrt{E[(\hat{b}) - \beta)]^2}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+* ```$RMSE``` The root mean squared error, calculated as $\sqrt{E[(b - \beta)^2]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
 
 * ```$adjustment.sets``` The set(s) of covariates that, if included in the fitted regression model (argument ```fit.model=```), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the ```adjustmentSets()``` function of the ```dagitty``` package. When the set is empty, no covariates are required.
 
@@ -204,21 +191,16 @@ The results indicate that the fitted model is producing a biased estimated of th
 
 Because the fitted model is misspecified, the estimated effect of $X \rightarrow Y$ is biased. ```regsim()``` returns the parameter estimates across all of the repetitions in a list component ```$b```. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
 
+This plot can be generated by running ```plot()``` on the ```regsim()``` output with ```type="perf"```. (The optional ```breaks=30``` argument increases the number of bars in the plot). 
+
 ```{r, fig.width=4.5, fig.height=4.5}
-hist(result_1a$b, breaks=30, freq=FALSE,
-     main="Parameter estimates for Y~X", xlab="b")
-
-points(density(result_1a$b), type='l')
-
-abline(v=.25, col="red", lty="dashed", lwd=1.5)
-
-abline(v=result_1a$empirical.CI, lty="dotted")
+plot(result_1a, type="perf", breaks=30)
 ```
 
-We can visualize the distribution of the simulated data in lots of ways. One of the best and easiest is with the ```pairs.panels()``` function in the ```psych``` package. The ```regsim()``` output component ```$data``` contains the simulated data from the first repetition, which can be passed to ```pairs.panels()``` or any other function.
+We can visualize the distribution of the simulated data in lots of ways. The easiest is to ```plot()``` the ```regsim()``` output using ```type="data"```. This plots the data from the first repetition of the simulation with the ```pairs.panels()``` function from the ```psych``` package. 
 
 ```{r, fig.width=5.5, fig.height=5.5}
-pairs.panels(result_1a$data)
+plot(result_1a, type="data")
 ```
 
 ### Obtaining an Unbiased Estimate of the Effect of X on Y
@@ -240,16 +222,8 @@ The results indicate good performance. Bias is very low, the coverage rate is ne
 An updated histogram / density plot of the parameter estimates illustrate that they are now centered on the true value of the parameter.
 
 ```{r, fig.width=4.5, fig.height=4.5}
-hist(result_1b$b, breaks=30, freq=FALSE,
-     main="Parameter estimates for Y~X", xlab="b")
-
-points(density(result_1b$b), type='l')
-
-abline(v=.25, col="red", lty="dashed", lwd=1.5)
-
-abline(v=result_1b$empirical.CI, lty="dotted")
+plot(result_1b, type="perf", breaks=30)
 ```
-
 
 ### Misspecifying the Model by Conditioning on the Mediator
 
@@ -263,17 +237,9 @@ result_1c <- regsim(reps=1000, n=100, true.model=true.model,
 result_1c
 ```
 
-As the results indicate, conditioning on the mediator is a bad idea. It results in an intensely biased estimate of the effect of $X$ on $Y$. In fact, the average estimated effect across all the repetitions is now zero.
-
+As the results indicate, conditioning on the mediator is a bad idea. It results in an intensely biased estimate of the effect of $X$ on $Y$. In fact, the average estimated effect across all the repetitions is now zero. Note that the variable $M$ is not included in the ```$adjustment.sets``` component of the output. 
 ```{r, fig.width=4.5, fig.height=4.5}
-hist(result_1c$b, breaks=30, freq=FALSE,
-     main="Parameter estimates for Y~X", xlab="b")
-
-points(density(result_1c$b), type='l')
-
-abline(v=.25, col="red", lty="dashed", lwd=1.5)
-
-abline(v=result_1c$empirical.CI, lty="dotted")
+plot(result_1c, type="perf", breaks=30)
 ```
 
 # Example 2: Violating distributional assumptions
@@ -288,7 +254,7 @@ $$
 \kappa \ge 1+\gamma^2
 $$
 
-Non-normal data generation in ```regsim()``` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in ```lavaan```'s ```simulateData()``` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of $\pm 4$. 
+Non-normal data generation in ```regsim()``` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in ```lavaan```'s ```simulateData()``` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of $\pm 4$. This is an extreme level of non-normality.
 
 ```{r, cache=T}
 result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", fit.model="Y~X", targetparm="X", targetval=.5, kurtosis=c(26, 0), skewness=c(4, 0))
@@ -304,8 +270,8 @@ In this case, you should not trust ```regsim()```'s output!
 
 Next, I examine the ```$data``` with ```psych```'s ```pairs.panels()``` function.
 
-```{r}
-pairs.panels(result_2$data)
+```{r, fig.width=5.5, fig.height=5.5}
+plot(result_2, type="data")
 ```
 
 The plot show that the $Y$ variable was skewed as intended. 
@@ -320,17 +286,10 @@ The results are unbiased, but the analytic standard errors are wrong. In fact, i
 
 The regression assumption that has been violated in this case is that the distribution of the residuals does not follow a normal distribution. The strutural part of the model is fine. The incorrect residual distribution manifests as an improperly-shaped shaped sampling distribution for the parameter estimates.
 
-The parameter estimates are stored in the output component ```$b```. In the code below, I will make a density plot of the empirical sampling distribution. I will then overlay the analytic sampling distribution (the blue dotted curve). When the regreesion assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value is denoted by the red vertical line.
+Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running ```plot()``` on the ```regsim()``` output with ```type="compareSE"```.  When the regreesion assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
 
-```{r}
-plot(density(result_2$b, adjust=1.2), ylim=c(0,10), 
-     main="Empirical versus analytic sampling distribution")
-
-x <- seq(.1, 1, by=.01)
-y <- dnorm(x, mean=result_2$expected.b, sd=result_2$analytic.SE)
-points(x, y, type="l", lty="dotted", col="blue")
-
-abline(v=.5, col="red", lty="dashed")
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_2, type="compareSE")
 ```
 
 Not only is the empirical sampling distribution platykurtotic, it is also slightly skewed to the right. 
@@ -341,22 +300,20 @@ This is a rather extreme example of nonnormality. Linear regression works reason
 
 Measurement error is a ubiquitous feature of real data. Linear regression models assume that the predictor variables are measured without error. No such assumption is made about the response variable. We can explore this issue with simulation.
 
-The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. 
+The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliabilitiy coefficients in the 0.5 range. 
 
 ## Measurement error in predictor variables
 
-Let us imagine that we can measure variable $X$ with a reliability of 0.8. According to classical test theory, $X$ is composed of a true score component $X_{true}$, a measurement error component $X_{error}$. The observed values of this variable, which are contaminated with measurement error, is $X_obs$. $X_{true}$ and $X_{error}$ are latent variables that cannot be observed.
+Let us imagine that we can measure variable $X$ with a reliability of 0.7. According to classical test theory, the observed score $X_{obs}$ is composed of a true score component $X_{true}$ plus measurement error component $X_{error}$. 
 
-The situation can be represented by the following path diagram.
+A key equation in classical test theory is
 
-```{r, fig.width=4.5, fig.height=2.5, echo=F}
-dag <- dagitty("dag{Y <- X_true -> X_obs <- X_error }")
-coordinates(dag) <- list(x=c(Y=1, X_true=0, X_error=0, X_obs=.5), 
-                         y=c(Y=.5, X_true=0, X_error=1, X_obs=.5))
-exposures(dag) <- "X_true"
-outcomes(dag) <- "Y"
-plot(dag)
-```
+$$
+Var(X) = \frac{Var(T)}{Var(T)+Var(E)}
+$$
+
+
+
 
 Note that there is no path from $X_obs$ to $Y$. $Y$ is caused by the true value, $X_{true}$, and not by the observed $X_{obs}$. The path coefficients $X_{true} \rightarrow X_{obs}$ and $X_{error} \rightarrow X_{obs}$ can be manipulated to control the reliability coefficient of $X_{obs}$. 
 
@@ -367,44 +324,63 @@ The path coefficient for $X_{error} \rightarrow X_{obs}$ is also dictated by the
 The code to define the data generating model is as follows.
  
 ```{r}
-true.model <- "X_obs ~~ 0*X_obs
-               X_obs ~ 1*X_true + .25*X_error
+true.model <- "X_true =~ 1*X_obs  
+               X_true ~~ 1*X_true   
+               X_obs ~~ .25*X_obs
                Y ~ .5*X_true"
 ```
 
-Next, we run the simulation, being sure to set the ```standardized=``` argument to ```TRUE```. Also note that the target value I have set is equal to the effect of $X_true \rightarrow Y$, not the zero effect of $X_{obs} \rightarrow Y$. 
-
-```{r, cache=F}
-result_3a <- regsim(reps=1000, n=300, true.model=true.model, fit.model="Y~X_obs", targetparm="X_obs", targetval=.5)
-
-result_3a
-```
+Next, we run the simulation. Also note that the target value I have set is equal to the effect of $X_true \rightarrow Y$, not the zero effect of $X_{obs} \rightarrow Y$. 
 
 The results indicate that the estimated effect of $X \rightarrow Y$ is biased. The reason is that the unobservable true score $X_{true}$ is a confounder. This is seen in the ```$adjustment.sets``` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent $X_{true}$ with its proxy variable, $X_{obs}$. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
 
 
 ## Measurement error in the response variable
 
-```{r, fig.width=4.5, fig.height=2.5, echo=F}
-dag <- dagitty("dag{X -> Y_true -> Y_obs <- Y_error }")
-coordinates(dag) <- list(x=c(X=0, Y_true=1, Y_error=1, Y_obs=.5), 
-                         y=c(X=.5, Y_true=0, Y_error=1, Y_obs=.5))
-exposures(dag) <- "X"
-outcomes(dag) <- "Y_true"
-plot(dag)
-```
+
+
+
+
 
 
 ```{r}
-true.model <- "Y_obs ~~ 0*Y_obs
-               Y_obs ~ 1*Y_true + .25*Y_error
+result_3a <- regsim(reps=1000, n=300, true.model=true.model, 
+                    fit.model="Y~X_obs", targetparm="X_obs", targetval=.5)
+result_3a
+```
+
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_3a, type="perf", breaks=30)
+```
+
+
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_3a, type="model", layout="circle")
+```
+
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_3a, type="data")
+```
+
+```{r}
+true.model <- "Y_true =~ 1*Y_obs  
+               Y_true ~~ 1*Y_true   
+               Y_obs ~~ .25*Y_obs
                Y_true ~ .5*X"
 ```
 
-
-
-```{r, cache=F}
-result_3b <- regsim(reps=1000, n=1000, true.model=true.model, fit.model="Y_obs~X", targetparm="X", targetval=.5)
+```{r}
+result_3b <- regsim(reps=1000, n=300, true.model=true.model, 
+                    fit.model="Y_obs~X", targetparm="X", targetval=.5)
 
 result_3b
 ```
+
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_3b, type="perf", breaks=30)
+```
+
+```{r, fig.width=4.5, fig.height=4.5}
+plot(result_3b, type="model", layout="circle")
+```
+

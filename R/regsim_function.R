@@ -59,8 +59,9 @@
 #' plot(result, type="perf")
 #' plot(result, type="compareSE")
 #'
-#' @importFrom stats as.formula confint lm na.omit sd quantile
+#' @importFrom stats as.formula confint lm na.omit sd quantile density dnorm
 #' @importFrom lavaan simulateData
+#' @importFrom graphics abline hist legend plot points
 #' @export
 
 regsim <- function(reps, n, true.model, fit.model, targetparm, targetval,

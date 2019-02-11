@@ -3,26 +3,28 @@
 #' @param x an object of class regsim to be printed
 #' @param type character; one of "model", "perf", or "data". the type of plot to produce.
 #'     defaults to "model"
-#' @param sizeMan numeric; controls scale of the variables and boxes, defaults to 10
-#' @param edge.label.cex numeric; controls scale of the path coefficient. defaults to 1.5
-#' @param fixedStyle numeric or vector of an lty and a color for the arrows. defaults to 1 for black, solid lines
+#' @param sizeMan numeric; controls scale of the variables and boxes, defaults to 10. Applies only to \code{type="model"}.
+#' @param edge.label.cex numeric; controls scale of the path coefficient. defaults to 1.5. Applies only to \code{type="model"}.
+#' @param fixedStyle numeric or vector of an lty and a color for the arrows. defaults to 1 for black, solid lines. Applies only to \code{type="model"}.
 #' @param nCharNodes numeric; controls how many characters of each variable's name to display. defaults to
-#'    zero so that the full name is shown
+#'    zero so that the full name is shown. Applies only to \code{type="model"}.
+#' @param residuals logical, controls whether the residuals should be displayed in the model plot.
+#'    Applies only to \code{type="model"}.
 #' @param ... additional arguments to be passed to \code{semPlot::semPaths} (for \code{type="model"}),
 #'    \code{hist} (for \code{type="perf"}), or to \code{psych::pairs.panels} (for \code{type="data"})
 #'
 #' @importFrom semPlot semPlotModel semPaths
 #' @export
 
-plot.regsim <- function(x, type="model", sizeMan=10, edge.label.cex=1.5,
-                        fixedStyle=1, nCharNodes=0, ...) {
+plot.regsim <- function(x, type="perf", sizeMan=10, edge.label.cex=1.5,
+                        fixedStyle=1, nCharNodes=0, residuals=FALSE, ...) {
 
   if (max(!type %in% c("model", "perf", "data", "compareSE"))) stop("Argument type must only contain \"model\", \"perf\", \"data\", or \"compareSE\"")
 
   if (max(type %in% "model")) {
     semPlot::semPaths(semPlot::semPlotModel(x$true.model), whatLabels="est",
-            residuals=FALSE, exoCov=FALSE, sizeMan=sizeMan, edge.label.cex=edge.label.cex,
-             fixedStyle=fixedStyle, ...)}
+           exoCov=FALSE, sizeMan=sizeMan, edge.label.cex=edge.label.cex, residuals=residuals,
+             fixedStyle=fixedStyle, nCharNodes=nCharNodes, ...)}
 
   if (max(type %in% "perf")) {
     lower.limit <- min(x$targetval, x$b)

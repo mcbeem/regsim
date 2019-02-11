@@ -4,8 +4,9 @@
 \alias{plot.regsim}
 \title{Plot method for class regsim}
 \usage{
-\method{plot}{regsim}(x, type = "model", sizeMan = 10,
-  edge.label.cex = 1.5, fixedStyle = 1, nCharNodes = 0, ...)
+\method{plot}{regsim}(x, type = "perf", sizeMan = 10,
+  edge.label.cex = 1.5, fixedStyle = 1, nCharNodes = 0,
+  residuals = FALSE, ...)
 }
 \arguments{
 \item{x}{an object of class regsim to be printed}
@@ -13,14 +14,17 @@
 \item{type}{character; one of "model", "perf", or "data". the type of plot to produce.
 defaults to "model"}
 
-\item{sizeMan}{numeric; controls scale of the variables and boxes, defaults to 10}
+\item{sizeMan}{numeric; controls scale of the variables and boxes, defaults to 10. Applies only to \code{type="model"}.}
 
-\item{edge.label.cex}{numeric; controls scale of the path coefficient. defaults to 1.5}
+\item{edge.label.cex}{numeric; controls scale of the path coefficient. defaults to 1.5. Applies only to \code{type="model"}.}
 
-\item{fixedStyle}{numeric or vector of an lty and a color for the arrows. defaults to 1 for black, solid lines}
+\item{fixedStyle}{numeric or vector of an lty and a color for the arrows. defaults to 1 for black, solid lines. Applies only to \code{type="model"}.}
 
 \item{nCharNodes}{numeric; controls how many characters of each variable's name to display. defaults to
-zero so that the full name is shown}
+zero so that the full name is shown. Applies only to \code{type="model"}.}
+
+\item{residuals}{logical, controls whether the residuals should be displayed in the model plot.
+Applies only to \code{type="model"}.}
 
 \item{...}{additional arguments to be passed to \code{semPlot::semPaths} (for \code{type="model"}),
 \code{hist} (for \code{type="perf"}), or to \code{psych::pairs.panels} (for \code{type="data"})}
