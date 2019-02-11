@@ -182,7 +182,7 @@ result_1a
 
 -   `$coverage` The proportion of repetitions in which the true value of the target parameter, *β*, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
 
--   `$RMSE` The root mean squared error, calculated as $\sqrt{E\[(b - \\beta)^2\]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+-   `$RMSE` The root mean squared error, calculated as sqrt(${E\[(b - \\beta)^2\]}$). The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
 
 -   `$adjustment.sets` The set(s) of covariates that, if included in the fitted regression model (argument `fit.model=`), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the `adjustmentSets()` function of the `dagitty` package. When the set is empty, no covariates are required. (**Note**: an empty adjustment set is represented by `{}`. A non-existent adjustment set is represented by no output at all. A non-existent adjustment set indicate that no regression model can achieve unbiased estimation with the variables that are available.)
 
