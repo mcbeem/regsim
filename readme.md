@@ -431,6 +431,10 @@ Measurement error in predictor variables
 
 Let us imagine that we can measure variable *X* with a reliability of 0.8. According to classical test theory, the observed score *X*<sub>*O*</sub> is composed of a true score component *X*<sub>*T*</sub> plus measurement error component *X*<sub>*E*</sub>.
 
+This situation can be represented by the following figure.
+
+![](readme_files/figure-markdown_github/unnamed-chunk-26-1.png)
+
 Two key equations in classical test theory are
 
 *V**a**r*(*X*)=*V**a**r*(*T*)+*V**a**r*(*E*)\]
@@ -439,33 +443,36 @@ and
 
 *ρ*<sub>*XX*</sub> = *V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
 
-where *ρ*<sub>*XX*</sub> is the reliability coefficient, *X* is the observed score, *T* is the true score, and *E* is measurement error.
+where *ρ*<sub>*XX*</sub> is the reliability coefficient, *X* is the observed score, *T* is the true score, and *E* is measurement error. These equations provide guidance for setting the parameters of the data generating model in order to produce an observed *X* variable with the desired reliability. Let us assume that the exogenous latent true score *X*<sub>*T*</sub> exists on a standardized metric with unit variance. Let us set the loading relating the observed score *X*<sub>*O*</sub> to the true score to be one. Then the true score contribution to *X*<sub>*O*</sub>'s variance is 1.0 (because of the rule *V**a**r*(*b**X*)=*b*<sup>2</sup>*V**a**r*(*X*)). The variance of the observed score must exceed the true score variance because the measurement error variance is additive. A bit of algebra allows us to solve for the residual variance required to produce *X*<sub>*O*</sub> with the desired reliability.
 
-Note that there is no path from *X*<sub>*O*</sub> to *Y*. *Y* is caused by the true value, *X*<sub>*T*</sub>, and not by the observed *X*<sub>*O*</sub>. The path coefficients *X*<sub>*T*</sub> → *X*<sub>*O*</sub> and *X*<sub>*E*</sub> → *X*<sub>*O*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*O*</sub>.
+*V**a**r*(*E*)=(1/*ρ*<sub>*XX*</sub>)−1
 
-Let us imagine the exogenous variables, *X*<sub>*T*</sub> and *X*<sub>*E*</sub>, exist on a standardized metric and thus both have variances of one. According to classical test theory, the observed score equals the true score plus error.
+In this case, to produce a reliability of 0.8, the error variance must be set to 0.25.
 
-The path coefficient for *X*<sub>*E*</sub> → *X*<sub>*O*</sub> is also dictated by the desired reliability. It should be set to one minus the square root of the reliability.
+The following diagram represents the data-generating model for this situation.
+
+![](readme_files/figure-markdown_github/unnamed-chunk-27-1.png)
+
+Note that the residual variance for *X*<sub>*O*</sub> has been set to 0.25, which represents the error variance. Its its true score variance is 1, and therefore its total variance is therefore 1.25. Finally, 1/1.25 = .80, the desired reliability coefficient.
+
+Note that there is no path from *X*<sub>*O*</sub> to *Y*. *Y* is caused by the true value, *X*<sub>*T*</sub>, and not by the observed *X*<sub>*O*</sub>. In fact, the true score is a confounder. The true value of *X*<sub>*O*</sub> → *Y* is actually zero!
 
 The code to define the data generating model is as follows.
 
 ``` r
-true.model <- "X_true =~ 1*X_obs  
-               X_true ~~ 1*X_true   
-               X_obs ~~ .25*X_obs
-               Y ~ .5*X_true"
+true.model <- "X_T =~ 1*X_O  
+               X_T ~~ 1*X_T   
+               X_O ~~ .25*X_O
+               Y ~ .5*X_T"
 ```
 
-Next, we run the simulation. Also note that the target value I have set is equal to the effect of *X*<sub>*t*</sub>*r**u**e* → *Y*, not the zero effect of *X*<sub>*O*</sub> → *Y*.
+In `lavaan` syntax, the symbol `=~` is read "measured by" and is used to define latent variables in terms of observed indicators. In this case, the true score is latent and is measured by the observed score *X*<sub>*O*</sub> with its loading fixed to one. The symbol `~~` is used to specify variances or residual variances. In the syntax above, *X*<sub>*T*</sub>'s total variance is set to one, and *X*<sub>*O*</sub>'s residual variance is set to 0.25. Finally, `~` represents path coefficients (read "regressed on" or "caused by") as before.
 
-The results indicate that the estimated effect of *X* → *Y* is biased. The reason is that the unobservable true score *X*<sub>*T*</sub> is a confounder. This is seen in the `$adjustment.sets` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent *X*<sub>*T*</sub> with its proxy variable, *X*<sub>*O*</sub>. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
-
-Measurement error in the response variable
-------------------------------------------
+Next, we run the simulation. Also note that the target value I have set is equal to the effect of *X*<sub>*T*</sub> → *Y*, not the zero effect of *X*<sub>*O*</sub> → *Y*. Because *X*<sub>*T*</sub> is defined as a latent variable, it will not appear in the simulated datasets produced by `regsim()`.
 
 ``` r
 result_3a <- regsim(reps=1000, n=300, true.model=true.model, 
-                    fit.model="Y~X_obs", targetparm="X_obs", targetval=.5)
+                    fit.model="Y~X_O", targetparm="X_O", targetval=.5)
 result_3a
 ```
 
@@ -473,62 +480,64 @@ result_3a
     ## [1] 0.5
     ## 
     ## $expected.b
-    ## [1] 0.3994679
+    ## [1] 0.4023442
     ## 
     ## $bias
-    ## [1] -0.1005321
+    ## [1] -0.09765579
     ## 
     ## $analytic.SE
-    ## [1] 0.05327543
+    ## [1] 0.05314453
     ## 
     ## $empirical.SE
-    ## [1] 0.05405776
+    ## [1] 0.05083078
     ## 
     ## $analytic.CI
     ##      2.5%     97.5% 
-    ## 0.2946242 0.5043116 
+    ## 0.2977581 0.5069303 
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.2958502 0.5027662 
+    ## 0.3049644 0.5061742 
     ## 
     ## $coverage
-    ## [1] 0.531
+    ## [1] 0.555
     ## 
     ## $RMSE
-    ## [1] 0.1141316
+    ## [1] 0.1100811
     ## 
     ## $adjustment.sets
+
+The results indicate that the estimated effect of *X*<sub>*O*</sub> → *Y* is biased. Linear regression models assume that the predictor variables are measured without error. Thus, we cannot obtain an unbiased estimate of the effect of *X* → *Y* when *X* is measured with error. In general, predictor variables cannot be replaced by noisy proxies without harming inferences. The bias can be visualized by plotting the `regsim()` output with `type="perf"`.
 
 ``` r
 plot(result_3a, type="perf", breaks=30)
 ```
 
-![](readme_files/figure-markdown_github/unnamed-chunk-28-1.png)
-
-``` r
-plot(result_3a, type="model", layout="circle")
-```
-
-![](readme_files/figure-markdown_github/unnamed-chunk-29-1.png)
-
-``` r
-plot(result_3a, type="data")
-```
-
 ![](readme_files/figure-markdown_github/unnamed-chunk-30-1.png)
 
+Noisy proxies of predictor variables are not ideal, but they are generally best that we can achieve, because all acts of measurement involve measurement error. The magnitude of the bias is directly related to the measurement reliability of the predictor variable. Thus, it is crucial to measure predictor variables as precisely as possible. Measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
+
+Measurement error in the response variable
+------------------------------------------
+
+Linear regression models do not assume that the response variable is measured without error. We can modify our previous analysis to illustrate what happens when *Y*, rather than *X*, is measured with error. The new data generating model looks like this:
+
+![](readme_files/figure-markdown_github/unnamed-chunk-31-1.png)
+
+It can be defined as follows.
+
 ``` r
-true.model <- "Y_true =~ 1*Y_obs  
-               Y_true ~~ 1*Y_true   
-               Y_obs ~~ .25*Y_obs
-               Y_true ~ .5*X"
+true.model <- "Y_T =~ 1*Y_O  
+               Y_T ~~ 1*Y_T   
+               Y_O ~~ .25*Y_O
+               Y_T ~ .5*X"
 ```
+
+The `regsim()` output confirms that the results are unbiased even though *Y* is measured with error.
 
 ``` r
 result_3b <- regsim(reps=1000, n=300, true.model=true.model, 
-                    fit.model="Y_obs~X", targetparm="X", targetval=.5)
-
+                    fit.model="Y_O~X", targetparm="X", targetval=.5)
 result_3b
 ```
 
@@ -536,42 +545,38 @@ result_3b
     ## [1] 0.5
     ## 
     ## $expected.b
-    ## [1] 0.5020528
+    ## [1] 0.4999318
     ## 
     ## $bias
-    ## [1] 0.002052804
+    ## [1] -6.81728e-05
     ## 
     ## $analytic.SE
-    ## [1] 0.06465195
+    ## [1] 0.0646636
     ## 
     ## $empirical.SE
-    ## [1] 0.06106333
+    ## [1] 0.06623344
     ## 
     ## $analytic.CI
     ##      2.5%     97.5% 
-    ## 0.3748206 0.6292850 
+    ## 0.3726767 0.6271870 
     ## 
     ## $empirical.CI
     ##      2.5%     97.5% 
-    ## 0.3872154 0.6170377 
+    ## 0.3755090 0.6346035 
     ## 
     ## $coverage
-    ## [1] 0.965
+    ## [1] 0.946
     ## 
     ## $RMSE
-    ## [1] 0.0610673
+    ## [1] 0.06620036
     ## 
     ## $adjustment.sets
     ##  {}
 
+Plotting the results illustrates the unbiased estimation.
+
 ``` r
 plot(result_3b, type="perf", breaks=30)
-```
-
-![](readme_files/figure-markdown_github/unnamed-chunk-33-1.png)
-
-``` r
-plot(result_3b, type="model", layout="circle")
 ```
 
 ![](readme_files/figure-markdown_github/unnamed-chunk-34-1.png)

@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{regsim}(x, type = "perf", sizeMan = 10,
   edge.label.cex = 1.5, fixedStyle = 1, nCharNodes = 0,
-  residuals = FALSE, ...)
+  whatLabels = "est", residuals = FALSE, ...)
 }
 \arguments{
 \item{x}{an object of class regsim to be printed}
@@ -22,6 +22,9 @@ defaults to "model"}
 
 \item{nCharNodes}{numeric; controls how many characters of each variable's name to display. defaults to
 zero so that the full name is shown. Applies only to \code{type="model"}.}
+
+\item{whatLabels}{character, controls what labels are shown in the model diagram. Must be one of \code{"name"},
+\code{"est"}, \code{"stand"}, \code{"eq"}, or \code{"no"}. Defaults to \code{"est"}. Applies only to \code{type="model"}.}
 
 \item{residuals}{logical, controls whether the residuals should be displayed in the model plot.
 Applies only to \code{type="model"}.}
