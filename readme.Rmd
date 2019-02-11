@@ -12,6 +12,7 @@ output:
 ```
 
 ```{r, include=FALSE}
+library(regsim)
 library(dagitty)
 ```
 
@@ -257,7 +258,9 @@ $$
 Non-normal data generation in ```regsim()``` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in ```lavaan```'s ```simulateData()``` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of $\pm 4$. This is an extreme level of non-normality.
 
 ```{r, cache=T}
-result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", fit.model="Y~X", targetparm="X", targetval=.5, kurtosis=c(26, 0), skewness=c(4, 0))
+result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", 
+                   fit.model="Y~X", targetparm="X", targetval=.5, 
+                   kurtosis=c(26, 0), skewness=c(4, 0))
 ```
 
 If the provided kurtosis value is too small for the skewness, you will see the following error message.
@@ -304,22 +307,18 @@ The **reliability** of a variable describes the proportion of its variance that 
 
 ## Measurement error in predictor variables
 
-Let us imagine that we can measure variable $X$ with a reliability of 0.7. According to classical test theory, the observed score $X_{obs}$ is composed of a true score component $X_{true}$ plus measurement error component $X_{error}$. 
+Let us imagine that we can measure variable $X$ with a reliability of 0.7. According to classical test theory, the observed score $X_{O}$ is composed of a true score component $X_{T}$ plus measurement error component $X_{E}$. 
 
 A key equation in classical test theory is
 
-$$
-Var(X) = \frac{Var(T)}{Var(T)+Var(E)}
-$$
+$Var(X) = Var(T) / [Var(T)+Var(E)]$
 
 
+Note that there is no path from $X_{O}$ to $Y$. $Y$ is caused by the true value, $X_{T}$, and not by the observed $X_{O}$. The path coefficients $X_{T} \rightarrow X_{O}$ and $X_{E} \rightarrow X_{O}$ can be manipulated to control the reliability coefficient of $X_{O}$. 
 
+Let us imagine the exogenous variables, $X_{T}$ and $X_{E}$, exist on a standardized metric and thus both have variances of one. According to classical test theory, the observed score equals the true score plus error.
 
-Note that there is no path from $X_obs$ to $Y$. $Y$ is caused by the true value, $X_{true}$, and not by the observed $X_{obs}$. The path coefficients $X_{true} \rightarrow X_{obs}$ and $X_{error} \rightarrow X_{obs}$ can be manipulated to control the reliability coefficient of $X_{obs}$. 
-
-Let us imagine the exogenous variables, $X_{true}$ and $X_{error}$, exist on a standardized metric and thus both have variances of one. According to classical test theory, the observed score equals the true score plus error.
-
-The path coefficient for $X_{error} \rightarrow X_{obs}$ is also dictated by the desired reliability. It should be set to one minus the square root of the reliability.
+The path coefficient for $X_{E} \rightarrow X_{O}$ is also dictated by the desired reliability. It should be set to one minus the square root of the reliability.
 
 The code to define the data generating model is as follows.
  
@@ -330,9 +329,9 @@ true.model <- "X_true =~ 1*X_obs
                Y ~ .5*X_true"
 ```
 
-Next, we run the simulation. Also note that the target value I have set is equal to the effect of $X_true \rightarrow Y$, not the zero effect of $X_{obs} \rightarrow Y$. 
+Next, we run the simulation. Also note that the target value I have set is equal to the effect of $X_true \rightarrow Y$, not the zero effect of $X_{O} \rightarrow Y$. 
 
-The results indicate that the estimated effect of $X \rightarrow Y$ is biased. The reason is that the unobservable true score $X_{true}$ is a confounder. This is seen in the ```$adjustment.sets``` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent $X_{true}$ with its proxy variable, $X_{obs}$. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
+The results indicate that the estimated effect of $X \rightarrow Y$ is biased. The reason is that the unobservable true score $X_{T}$ is a confounder. This is seen in the ```$adjustment.sets``` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent $X_{T}$ with its proxy variable, $X_{O}$. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
 
 
 ## Measurement error in the response variable
@@ -343,7 +342,7 @@ The results indicate that the estimated effect of $X \rightarrow Y$ is biased. T
 
 
 
-```{r}
+```{r, cache=T}
 result_3a <- regsim(reps=1000, n=300, true.model=true.model, 
                     fit.model="Y~X_obs", targetparm="X_obs", targetval=.5)
 result_3a
@@ -369,7 +368,7 @@ true.model <- "Y_true =~ 1*Y_obs
                Y_true ~ .5*X"
 ```
 
-```{r}
+```{r, cache=T}
 result_3b <- regsim(reps=1000, n=300, true.model=true.model, 
                     fit.model="Y_obs~X", targetparm="X", targetval=.5)
 

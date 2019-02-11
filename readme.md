@@ -342,7 +342,9 @@ I intend to generate data such that *Y* is severely skewed and *X* is not. I wil
 Non-normal data generation in `regsim()` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in `lavaan`'s `simulateData()` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of ±4. This is an extreme level of non-normality.
 
 ``` r
-result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", fit.model="Y~X", targetparm="X", targetval=.5, kurtosis=c(26, 0), skewness=c(4, 0))
+result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", 
+                   fit.model="Y~X", targetparm="X", targetval=.5, 
+                   kurtosis=c(26, 0), skewness=c(4, 0))
 ```
 
 If the provided kurtosis value is too small for the skewness, you will see the following error message.
@@ -427,19 +429,17 @@ The **reliability** of a variable describes the proportion of its variance that 
 Measurement error in predictor variables
 ----------------------------------------
 
-Let us imagine that we can measure variable *X* with a reliability of 0.7. According to classical test theory, the observed score *X*<sub>*o**b**s*</sub> is composed of a true score component *X*<sub>*t**r**u**e*</sub> plus measurement error component *X*<sub>*e**r**r**o**r*</sub>.
+Let us imagine that we can measure variable *X* with a reliability of 0.7. According to classical test theory, the observed score *X*<sub>*O*</sub> is composed of a true score component *X*<sub>*T*</sub> plus measurement error component *X*<sub>*E*</sub>.
 
 A key equation in classical test theory is
 
-$$
-Var(X) = \\frac{Var(T)}{Var(T)+Var(E)}
-$$
+*V**a**r*(*X*)=*V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
 
-Note that there is no path from *X*<sub>*o*</sub>*b**s* to *Y*. *Y* is caused by the true value, *X*<sub>*t**r**u**e*</sub>, and not by the observed *X*<sub>*o**b**s*</sub>. The path coefficients *X*<sub>*t**r**u**e*</sub> → *X*<sub>*o**b**s*</sub> and *X*<sub>*e**r**r**o**r*</sub> → *X*<sub>*o**b**s*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*o**b**s*</sub>.
+Note that there is no path from *X*<sub>*O*</sub> to *Y*. *Y* is caused by the true value, *X*<sub>*T*</sub>, and not by the observed *X*<sub>*O*</sub>. The path coefficients *X*<sub>*T*</sub> → *X*<sub>*O*</sub> and *X*<sub>*E*</sub> → *X*<sub>*O*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*O*</sub>.
 
-Let us imagine the exogenous variables, *X*<sub>*t**r**u**e*</sub> and *X*<sub>*e**r**r**o**r*</sub>, exist on a standardized metric and thus both have variances of one. According to classical test theory, the observed score equals the true score plus error.
+Let us imagine the exogenous variables, *X*<sub>*T*</sub> and *X*<sub>*E*</sub>, exist on a standardized metric and thus both have variances of one. According to classical test theory, the observed score equals the true score plus error.
 
-The path coefficient for *X*<sub>*e**r**r**o**r*</sub> → *X*<sub>*o**b**s*</sub> is also dictated by the desired reliability. It should be set to one minus the square root of the reliability.
+The path coefficient for *X*<sub>*E*</sub> → *X*<sub>*O*</sub> is also dictated by the desired reliability. It should be set to one minus the square root of the reliability.
 
 The code to define the data generating model is as follows.
 
@@ -450,9 +450,9 @@ true.model <- "X_true =~ 1*X_obs
                Y ~ .5*X_true"
 ```
 
-Next, we run the simulation. Also note that the target value I have set is equal to the effect of *X*<sub>*t*</sub>*r**u**e* → *Y*, not the zero effect of *X*<sub>*o**b**s*</sub> → *Y*.
+Next, we run the simulation. Also note that the target value I have set is equal to the effect of *X*<sub>*t*</sub>*r**u**e* → *Y*, not the zero effect of *X*<sub>*O*</sub> → *Y*.
 
-The results indicate that the estimated effect of *X* → *Y* is biased. The reason is that the unobservable true score *X*<sub>*t**r**u**e*</sub> is a confounder. This is seen in the `$adjustment.sets` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent *X*<sub>*t**r**u**e*</sub> with its proxy variable, *X*<sub>*o**b**s*</sub>. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
+The results indicate that the estimated effect of *X* → *Y* is biased. The reason is that the unobservable true score *X*<sub>*T*</sub> is a confounder. This is seen in the `$adjustment.sets` component of the output. Technically we might note that our analysis model isn't even correct, because we have replaced the latent *X*<sub>*T*</sub> with its proxy variable, *X*<sub>*O*</sub>. But it's the best that can be done given the variables we have. Thus, it is clear that measurement error bias is no different than confounding bias. Both forms are caused by omitted variables.
 
 Measurement error in the response variable
 ------------------------------------------
