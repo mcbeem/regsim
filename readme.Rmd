@@ -1,5 +1,5 @@
 ---
-title: "Introduction to regsim"
+title: "Introduction to the regsim R package"
 output:
   md_document:
     variant: markdown_github
@@ -15,7 +15,6 @@ output:
 library(regsim)
 library(dagitty)
 ```
-
 
 ```regsim``` is an ```R``` package to make simulation quick and easy. It can be installed from github with the following ```R``` code.
 
@@ -54,7 +53,7 @@ The process of specifying the data generating model is simple.
 
 1. **Sketch the path diagram (or SEM) describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
 
-2. **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogeous variable has at least one arrow directed toward it. In our example, variables $A$ and $B$ are exogenous, while $X$, $M$, and $Y$ are endogenous.
+2. **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogenous variable has at least one arrow directed toward it. In our example, variables $A$ and $B$ are exogenous, while $X$, $M$, and $Y$ are endogenous.
 
 3. **Write models for the endogenous variables**. Each exogenous variable must be described in terms of its causes. The syntax is similar to ```R```'s model formula used in ```lm()``` and many other model-fitting routines. In our example path diagram, $X$, $M$, and $Y$ were endogenous, so a model for each one will need to be provided. 
 
@@ -171,7 +170,7 @@ result_1a
 
 * ```$RMSE``` The root mean squared error, calculated as $\sqrt{E[(b - \beta)^2]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
 
-* ```$adjustment.sets``` The set(s) of covariates that, if included in the fitted regression model (argument ```fit.model=```), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the ```adjustmentSets()``` function of the ```dagitty``` package. When the set is empty, no covariates are required.
+* ```$adjustment.sets``` The set(s) of covariates that, if included in the fitted regression model (argument ```fit.model=```), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the ```adjustmentSets()``` function of the ```dagitty``` package. When the set is empty, no covariates are required. (**Note**: an empty adjustment set is represented by ```{}```. A non-existent adjustment set is represented by no output at all. A non-existent adjustment set indicate that no regression model can achieve unbiased estimation with the variables that are available.)
 
 
 The ```regsim()``` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected by running ```str()``` on the ```regsim()``` output. The other components of output include:
@@ -228,7 +227,7 @@ plot(result_1b, type="perf", breaks=30)
 
 ### Misspecifying the Model by Conditioning on the Mediator
 
-In general, downstream descendents of the target parameter should not be included as covariates in an analysis. The only exception would be when explicit mediation modeling is intended. What happens if $M$ is added to the model as a covariate, in addition to $A$ and $B$? Simulation can answer that question.
+In general, downstream descendants of the target parameter should not be included as covariates in an analysis. The only exception would be when explicit mediation modeling is intended. What happens if $M$ is added to the model as a covariate, in addition to $A$ and $B$? Simulation can answer that question.
 
 ```{r, cache=T}
 result_1c <- regsim(reps=1000, n=100, true.model=true.model, 
@@ -247,7 +246,7 @@ plot(result_1c, type="perf", breaks=30)
 
 The ```regsim()``` function can generate non-normal data via the optional ```skewness=``` and ```kurtosis=``` arguments. (These are passed to ```lavaan```'s ```simulateData``` function via ```...```). 
 
-In this case the model will be a simple regression of $Y$ on $X$, but the variables will be generated tuch they they are skewed and kurtotic. The ```skewness=``` and ```kurtosis=``` arguments expect a vector of these values for each variable in the data-generating model. However, I do not understand how the underlying ```simulateData()``` function orders the variables. Thus, I find it necessary to experiment with the order, each time plotting the the first generated dataset (via the ```$data``` output component) until the desired result is obtained. 
+In this case the model will be a simple regression of $Y$ on $X$, but the variables will be generated such they they are skewed and kurtotic. The ```skewness=``` and ```kurtosis=``` arguments expect a vector of these values for each variable in the data-generating model. However, I do not understand how the underlying ```simulateData()``` function orders the variables. Thus, I find it necessary to experiment with the order, each time plotting the the first generated dataset (via the ```$data``` output component) until the desired result is obtained. 
 
 I intend to generate data such that $Y$ is severely skewed and $X$ is not. I will try specifying ```skewness=c(4,0)```, hoping that the skewness will be applied to $Y$. Also, it is important to note that skewness and kurtosis are not independent; skewness implies kurtosis. If $\kappa$ is the full kurtosis of a distribution, and $\gamma$ is the skewness, then the following inequality must be satisfied.
 
@@ -255,7 +254,7 @@ $$
 \kappa \ge 1+\gamma^2
 $$
 
-Non-normal data generation in ```regsim()``` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in ```lavaan```'s ```simulateData()``` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of $\pm 4$. This is an extreme level of non-normality.
+Non-normal data generation in ```regsim()``` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in ```lavaan```'s ```simulateData()``` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satisfy the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of $\pm 4$. This is an extreme level of non-normality.
 
 ```{r, cache=T}
 result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", 
@@ -287,9 +286,9 @@ result_2
 
 The results are unbiased, but the analytic standard errors are wrong. In fact, it is about half the magnitude that it should be. Consequently, the analytic 95% confidence interval is too narrow, and the coverage rate is only about 70%. A hypothesis test for this parameter would be *liberal*, meaning that its long-run false positive rate would be much higher than the alpha criterion should allow. 
 
-The regression assumption that has been violated in this case is that the distribution of the residuals does not follow a normal distribution. The strutural part of the model is fine. The incorrect residual distribution manifests as an improperly-shaped shaped sampling distribution for the parameter estimates.
+The regression assumption that has been violated in this case is that the distribution of the residuals does not follow a normal distribution. The structural part of the model is fine. The incorrect residual distribution manifests as an improperly-shaped shaped sampling distribution for the parameter estimates.
 
-Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running ```plot()``` on the ```regsim()``` output with ```type="compareSE"```.  When the regreesion assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
+Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running ```plot()``` on the ```regsim()``` output with ```type="compareSE"```.  When the regression assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
 
 ```{r, fig.width=4.5, fig.height=4.5}
 plot(result_2, type="compareSE")
@@ -297,13 +296,13 @@ plot(result_2, type="compareSE")
 
 Not only is the empirical sampling distribution platykurtotic, it is also slightly skewed to the right. 
 
-This is a rather extreme example of nonnormality. Linear regression works reasonbly well for minor departures from the normality assumption. 
+This is a rather extreme example of non-normality. Linear regression works reasonably well for minor departures from the normality assumption. 
 
 # Example 3: Measurement error
 
 Measurement error is a ubiquitous feature of real data. Linear regression models assume that the predictor variables are measured without error. No such assumption is made about the response variable. We can explore this issue with simulation.
 
-The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliabilitiy coefficients in the 0.5 range. 
+The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliability coefficients in the 0.5 range. 
 
 ## Measurement error in predictor variables
 
@@ -311,7 +310,7 @@ Let us imagine that we can measure variable $X$ with a reliability of 0.8. Accor
 
 This situation can be represented by the following figure. 
 
-```{r, echo=F, cache=T, fig.width=4.5, fig.height=4.5}
+```{r, echo=F, cache=T, fig.width=4.5, fig.height=3.5}
 
 true.model <- "X_T =~ 1*X_O  
                X_T ~~ 1*X_T   
@@ -346,7 +345,7 @@ In this case, to produce a reliability of 0.8, the error variance must be set to
 
 The following diagram represents the data-generating model for this situation. 
 
-```{r, echo=F, cache=T, fig.width=4.5, fig.height=4.5}
+```{r, echo=F, cache=T, fig.width=4.5, fig.height=3.5}
 plot(fig_3a, type="model", layout=coord, resid=T)
 ```
 
@@ -376,7 +375,7 @@ result_3a
 The results indicate that the estimated effect of $X_O \rightarrow Y$ is biased. 
 Linear regression models assume that the predictor variables are measured without error. Thus, we cannot obtain an unbiased estimate of the effect of $X \rightarrow Y$ when $X$ is measured with error. In general, predictor variables cannot be replaced by noisy proxies without harming inferences. The bias can be visualized by plotting the ```regsim()``` output with ```type="perf"```.
 
-```{r, fig.height=4.5, fig.width=4.5}
+```{r, fig.height=3.5, fig.width=4.5}
 plot(result_3a, type="perf", breaks=30)
 ```
 
@@ -386,7 +385,7 @@ Noisy proxies of predictor variables are not ideal, but they are generally best 
 
 Linear regression models do not assume that the response variable is measured without error. We can modify our previous analysis to illustrate what happens when $Y$, rather than $X$, is measured with error. The new data generating model looks like this:
 
-```{r, echo=F, cache=T, fig.width=4.5, fig.heigh=4.5}
+```{r, echo=F, cache=T, fig.width=4.5, fig.height=3.5}
 
 true.model <- "Y_T =~ 1*Y_O  
                Y_T ~~ 1*Y_T   

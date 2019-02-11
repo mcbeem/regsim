@@ -29,7 +29,7 @@ The process of specifying the data generating model is simple.
 
 1.  **Sketch the path diagram (or SEM) describing the true model**. The process begins by sketching out a path diagram of the relationships between the variables. The arrows indicate not only causation, but in this case also imply a linear functional form. Each arrow must be assigned a *path coefficient*; a regression slope describing how much the downstream variable will change in response to an isolated-one unit change of the upstream variable.
 
-2.  **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogeous variable has at least one arrow directed toward it. In our example, variables *A* and *B* are exogenous, while *X*, *M*, and *Y* are endogenous.
+2.  **Classify the variables**. Next, the variables in the diagram are classified as either **exogenous** or **endogenous**. An exogenous variable has no arrow directed towards it; it has no in-system causes. An endogenous variable has at least one arrow directed toward it. In our example, variables *A* and *B* are exogenous, while *X*, *M*, and *Y* are endogenous.
 
 3.  **Write models for the endogenous variables**. Each exogenous variable must be described in terms of its causes. The syntax is similar to `R`'s model formula used in `lm()` and many other model-fitting routines. In our example path diagram, *X*, *M*, and *Y* were endogenous, so a model for each one will need to be provided.
 
@@ -182,9 +182,9 @@ result_1a
 
 -   `$coverage` The proportion of repetitions in which the true value of the target parameter, *β*, is contained in the analytic confidence interval. The coverage rate should should approximate the confidence level for the interval if model assumptions are met.
 
--   `$RMSE` The root mean squared error, calculated as $\\sqrt{E\[(b - \\beta)^2\]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
+-   `$RMSE` The root mean squared error, calculated as $\sqrt{E\[(b - \\beta)^2\]}$. The RMSE is includes contributions from both sampling error and bias and is a single-value summary of how close, on average, estimates come to the true value.
 
--   `$adjustment.sets` The set(s) of covariates that, if included in the fitted regression model (argument `fit.model=`), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the `adjustmentSets()` function of the `dagitty` package. When the set is empty, no covariates are required.
+-   `$adjustment.sets` The set(s) of covariates that, if included in the fitted regression model (argument `fit.model=`), would allow for unbiased estimation of the target parameter. The adjustment sets are calculated using the `adjustmentSets()` function of the `dagitty` package. When the set is empty, no covariates are required. (**Note**: an empty adjustment set is represented by `{}`. A non-existent adjustment set is represented by no output at all. A non-existent adjustment set indicate that no regression model can achieve unbiased estimation with the variables that are available.)
 
 The `regsim()` output includes a few other components which are not printed but are nonetheless available. The full contents can be inspected by running `str()` on the `regsim()` output. The other components of output include:
 
@@ -278,7 +278,7 @@ plot(result_1b, type="perf", breaks=30)
 
 ### Misspecifying the Model by Conditioning on the Mediator
 
-In general, downstream descendents of the target parameter should not be included as covariates in an analysis. The only exception would be when explicit mediation modeling is intended. What happens if *M* is added to the model as a covariate, in addition to *A* and *B*? Simulation can answer that question.
+In general, downstream descendants of the target parameter should not be included as covariates in an analysis. The only exception would be when explicit mediation modeling is intended. What happens if *M* is added to the model as a covariate, in addition to *A* and *B*? Simulation can answer that question.
 
 ``` r
 result_1c <- regsim(reps=1000, n=100, true.model=true.model, 
@@ -333,13 +333,13 @@ Example 2: Violating distributional assumptions
 
 The `regsim()` function can generate non-normal data via the optional `skewness=` and `kurtosis=` arguments. (These are passed to `lavaan`'s `simulateData` function via `...`).
 
-In this case the model will be a simple regression of *Y* on *X*, but the variables will be generated tuch they they are skewed and kurtotic. The `skewness=` and `kurtosis=` arguments expect a vector of these values for each variable in the data-generating model. However, I do not understand how the underlying `simulateData()` function orders the variables. Thus, I find it necessary to experiment with the order, each time plotting the the first generated dataset (via the `$data` output component) until the desired result is obtained.
+In this case the model will be a simple regression of *Y* on *X*, but the variables will be generated such they they are skewed and kurtotic. The `skewness=` and `kurtosis=` arguments expect a vector of these values for each variable in the data-generating model. However, I do not understand how the underlying `simulateData()` function orders the variables. Thus, I find it necessary to experiment with the order, each time plotting the the first generated dataset (via the `$data` output component) until the desired result is obtained.
 
 I intend to generate data such that *Y* is severely skewed and *X* is not. I will try specifying `skewness=c(4,0)`, hoping that the skewness will be applied to *Y*. Also, it is important to note that skewness and kurtosis are not independent; skewness implies kurtosis. If *κ* is the full kurtosis of a distribution, and *γ* is the skewness, then the following inequality must be satisfied.
 
 *κ* ≥ 1 + *γ*<sup>2</sup>
 
-Non-normal data generation in `regsim()` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in `lavaan`'s `simulateData()` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satistify the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of ±4. This is an extreme level of non-normality.
+Non-normal data generation in `regsim()` is based on the algorithm presented by Vale and Maurelli (1983, as implemented in `lavaan`'s `simulateData()` function) and is quite sensitive to the kurtosis value. Successful convergence appears to require kurtosis values well above those that would satisfy the inequality given above. Through trial and error I discovered that a kurtosis value of 26 or higher is needed to simulate data with a skewness of ±4. This is an extreme level of non-normality.
 
 ``` r
 result_2 <- regsim(reps=1000, n=500, true.model="Y~.5*X", 
@@ -405,9 +405,9 @@ result_2
 
 The results are unbiased, but the analytic standard errors are wrong. In fact, it is about half the magnitude that it should be. Consequently, the analytic 95% confidence interval is too narrow, and the coverage rate is only about 70%. A hypothesis test for this parameter would be *liberal*, meaning that its long-run false positive rate would be much higher than the alpha criterion should allow.
 
-The regression assumption that has been violated in this case is that the distribution of the residuals does not follow a normal distribution. The strutural part of the model is fine. The incorrect residual distribution manifests as an improperly-shaped shaped sampling distribution for the parameter estimates.
+The regression assumption that has been violated in this case is that the distribution of the residuals does not follow a normal distribution. The structural part of the model is fine. The incorrect residual distribution manifests as an improperly-shaped shaped sampling distribution for the parameter estimates.
 
-Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running `plot()` on the `regsim()` output with `type="compareSE"`. When the regreesion assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
+Below is a density plot of the empirical sampling distribution. The analytic sampling distribution is shown as the blue dotted curve. This plot can be obtained by running `plot()` on the `regsim()` output with `type="compareSE"`. When the regression assumptions are met, these two distributions are identical in expectation. But they diverge when assumptions are violated. The true value of the parameter is denoted by the red vertical line.
 
 ``` r
 plot(result_2, type="compareSE")
@@ -417,14 +417,14 @@ plot(result_2, type="compareSE")
 
 Not only is the empirical sampling distribution platykurtotic, it is also slightly skewed to the right.
 
-This is a rather extreme example of nonnormality. Linear regression works reasonbly well for minor departures from the normality assumption.
+This is a rather extreme example of non-normality. Linear regression works reasonably well for minor departures from the normality assumption.
 
 Example 3: Measurement error
 ============================
 
 Measurement error is a ubiquitous feature of real data. Linear regression models assume that the predictor variables are measured without error. No such assumption is made about the response variable. We can explore this issue with simulation.
 
-The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliabilitiy coefficients in the 0.5 range.
+The **reliability** of a variable describes the proportion of its variance that is true score rather than measurement error. Many assessments in psychology have reliability coefficients of 0.7 to 0.9. Single item indicators often have reliability coefficients in the 0.5 range.
 
 Measurement error in predictor variables
 ----------------------------------------
