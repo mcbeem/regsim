@@ -437,9 +437,9 @@ Two key equations in classical test theory are
 
 and
 
-*ρ*<sub>*X**X*</sub> = *V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
+*ρ*<sub>*XX*</sub> = *V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
 
-where \_{XX} is the reliability coefficient, *X* is the observed score, *T* is the true score, and *E* is measurement error.
+where *ρ*<sub>*XX*</sub> is the reliability coefficient, *X* is the observed score, *T* is the true score, and *E* is measurement error.
 
 Note that there is no path from *X*<sub>*O*</sub> to *Y*. *Y* is caused by the true value, *X*<sub>*T*</sub>, and not by the observed *X*<sub>*O*</sub>. The path coefficients *X*<sub>*T*</sub> → *X*<sub>*O*</sub> and *X*<sub>*E*</sub> → *X*<sub>*O*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*O*</sub>.
 
