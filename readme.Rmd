@@ -307,12 +307,17 @@ The **reliability** of a variable describes the proportion of its variance that 
 
 ## Measurement error in predictor variables
 
-Let us imagine that we can measure variable $X$ with a reliability of 0.7. According to classical test theory, the observed score $X_{O}$ is composed of a true score component $X_{T}$ plus measurement error component $X_{E}$. 
+Let us imagine that we can measure variable $X$ with a reliability of 0.8. According to classical test theory, the observed score $X_{O}$ is composed of a true score component $X_{T}$ plus measurement error component $X_{E}$. 
 
-A key equation in classical test theory is
+Two key equations in classical test theory are
 
-$Var(X) = Var(T) / [Var(T)+Var(E)]$
+$Var(X) = Var(T) +Var(E)]$
 
+and 
+
+$\rho_{XX} = Var(T) / [Var(T) + Var(E)]$
+
+where \rho_{XX} is the reliability coefficient, $X$ is the observed score, $T$ is the true score, and $E$ is measurement error.
 
 Note that there is no path from $X_{O}$ to $Y$. $Y$ is caused by the true value, $X_{T}$, and not by the observed $X_{O}$. The path coefficients $X_{T} \rightarrow X_{O}$ and $X_{E} \rightarrow X_{O}$ can be manipulated to control the reliability coefficient of $X_{O}$. 
 
@@ -335,12 +340,6 @@ The results indicate that the estimated effect of $X \rightarrow Y$ is biased. T
 
 
 ## Measurement error in the response variable
-
-
-
-
-
-
 
 ```{r, cache=T}
 result_3a <- regsim(reps=1000, n=300, true.model=true.model, 

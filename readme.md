@@ -429,11 +429,17 @@ The **reliability** of a variable describes the proportion of its variance that 
 Measurement error in predictor variables
 ----------------------------------------
 
-Let us imagine that we can measure variable *X* with a reliability of 0.7. According to classical test theory, the observed score *X*<sub>*O*</sub> is composed of a true score component *X*<sub>*T*</sub> plus measurement error component *X*<sub>*E*</sub>.
+Let us imagine that we can measure variable *X* with a reliability of 0.8. According to classical test theory, the observed score *X*<sub>*O*</sub> is composed of a true score component *X*<sub>*T*</sub> plus measurement error component *X*<sub>*E*</sub>.
 
-A key equation in classical test theory is
+Two key equations in classical test theory are
 
-*V**a**r*(*X*)=*V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
+*V**a**r*(*X*)=*V**a**r*(*T*)+*V**a**r*(*E*)\]
+
+and
+
+*ρ*<sub>*X**X*</sub> = *V**a**r*(*T*)/\[*V**a**r*(*T*)+*V**a**r*(*E*)\]
+
+where \_{XX} is the reliability coefficient, *X* is the observed score, *T* is the true score, and *E* is measurement error.
 
 Note that there is no path from *X*<sub>*O*</sub> to *Y*. *Y* is caused by the true value, *X*<sub>*T*</sub>, and not by the observed *X*<sub>*O*</sub>. The path coefficients *X*<sub>*T*</sub> → *X*<sub>*O*</sub> and *X*<sub>*E*</sub> → *X*<sub>*O*</sub> can be manipulated to control the reliability coefficient of *X*<sub>*O*</sub>.
 
