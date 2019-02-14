@@ -67,7 +67,7 @@ Where the ```~``` character is read "predicted by" or "regressed on." This formu
 
 $$X_i = b_0 + b_1(A_i) + b_2(B_i) + e_i$$
 
-Since we are specifying the true model, we must provide values for parameters $b_1$ and $b_2$. The intercept, $b_0$, and the residual variance $e_i$ are nuisance parameters in many simulation application. We do not need to choose values for them when using ```regsim()``` to simulate data.  The ```regsim()``` function uses the ```simulateSEM()``` function from the ```lavaan``` package to do the data generation.
+Since we are specifying the true model, we must provide values for parameters $b_1$ and $b_2$. The intercept, $b_0$, and the residual variance $e_i$ are nuisance parameters in many simulation applications. We do not need to choose values for them when using ```regsim()``` to simulate data.  The ```regsim()``` function uses the ```simulateSEM()``` function from the ```lavaan``` package to do the data generation.
 
 Let's choose values of 0.5 for both $b_1$ and $b_2$. The model for $X$, expressed in the proper syntax for ```regsim()```, is as follows. 
 
@@ -187,7 +187,7 @@ The ```regsim()``` output includes a few other components which are not printed 
 
 ### Interpreting the results
 
-The results indicate that the fitted model is producing a biased estimated of the true effect of $X \rightarrow Y$. This is can clearly be observed in the discrepancy between the mean estimated value (```$expected.b```) and the true value, which is also represented in the ```$bias``` value. The empirical and analytic standard error are quite close to one another, as are the confidence intervals, indicating that the problem with this model is in its fixed (structural) component. The bias results in a coverage rate that is far below its 95% nominal value. The RMSE is much larger than the standard error as a result of the bias.
+The results indicate that the fitted model is producing a biased estimated of the true effect of $X \rightarrow Y$. This is can clearly be observed in the discrepancy between the mean estimated value (```$expected.b```) and the true value, which is also represented in the ```$bias``` value. The empirical and analytic standard errors are quite close to one another, as are the confidence intervals, indicating that the problem with this model is in its fixed (structural) component. The bias results in a coverage rate that is far below its 95% nominal value. The RMSE is much larger than the standard error as a result of the bias.
 
 Because the fitted model is misspecified, the estimated effect of $X \rightarrow Y$ is biased. ```regsim()``` returns the parameter estimates across all of the repetitions in a list component ```$b```. Below is a histogram with a superimposed density plot of the parameter estimates. The true value of the relationship is indicated with a dashed vertical red line. The locations of the 2.5th and 97.5th percentiles (representing the empirical 95% confidence interval) are indicated with dotted vertical lines.
 
